@@ -9,13 +9,14 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authHeaders = await getAuthHeaderFromCookie();
   const { id } = await params;
   const body = await req.text();
   const backendRes = await fetch(toBackendUrl(`/tasks/${id}`), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaderFromCookie(),
+      ...authHeaders,
     },
     body,
     cache: "no-store",
@@ -29,11 +30,12 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authHeaders = await getAuthHeaderFromCookie();
   const { id } = await params;
   const backendRes = await fetch(toBackendUrl(`/tasks/${id}`), {
     method: "DELETE",
     headers: {
-      ...getAuthHeaderFromCookie(),
+      ...authHeaders,
     },
     cache: "no-store",
   });

@@ -6,8 +6,9 @@ import {
 } from "@/app/api/_lib/backend";
 
 export async function GET() {
+  const authHeaders = await getAuthHeaderFromCookie();
   const backendRes = await fetch(toBackendUrl("/tasks"), {
-    headers: getAuthHeaderFromCookie(),
+    headers: authHeaders,
     cache: "no-store",
   });
   const data = await safeBackendJson(backendRes);
@@ -15,12 +16,13 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const authHeaders = await getAuthHeaderFromCookie();
   const body = await req.text();
   const backendRes = await fetch(toBackendUrl("/tasks"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaderFromCookie(),
+      ...authHeaders,
     },
     body,
     cache: "no-store",

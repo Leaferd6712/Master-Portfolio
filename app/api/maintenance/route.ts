@@ -15,12 +15,13 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  const authHeaders = await getAuthHeaderFromCookie();
   const body = await req.text();
   const backendRes = await fetch(toBackendUrl("/maintenance"), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaderFromCookie(),
+      ...authHeaders,
     },
     body,
     cache: "no-store",

@@ -9,8 +9,9 @@ export function toBackendUrl(path: string): string {
   return `${BACKEND_API_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export function getAuthHeaderFromCookie(): Record<string, string> {
-  const token = cookies().get("token")?.value;
+export async function getAuthHeaderFromCookie(): Promise<Record<string, string>> {
+  const store = await cookies();
+  const token = store.get("token")?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
