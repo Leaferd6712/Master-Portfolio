@@ -8,12 +8,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Password is required" }, { status: 400 });
   }
 
-  const backendRes = await fetch(toBackendUrl("/auth/login"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password: body.password }),
-    cache: "no-store",
-  });
+  let backendRes: Response;
+  try {
+    backendRes = await fetch(toBackendUrl("/auth/login"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: body.password }),
+      cache: "no-store",
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json(
+      { error: `Cannot reach backend: ${msg}. Check BACKEND_API_URL on Vercel.` },
+      { status: 502 }
+    );
+  }
 
   const data = (await safeBackendJson(backendRes)) as
     | { token?: string; detail?: string }
@@ -21,7 +30,7 @@ export async function POST(req: Request) {
 
   if (!backendRes.ok || !data?.token) {
     return NextResponse.json(
-      { error: data?.detail ?? "Invalid login" },
+      { error: data?.detail ?? "Invalid password" },
       { status: backendRes.status || 401 }
     );
   }
