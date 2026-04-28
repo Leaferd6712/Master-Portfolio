@@ -19,6 +19,7 @@ DATA_DIR = ROOT / "data"
 PROJECTS_PATH = DATA_DIR / "projects.json"
 TASKS_PATH = DATA_DIR / "tasks.json"
 CONTEXT_PATH = DATA_DIR / "context.md"
+MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
 
 PASSWORD = os.getenv("DASHBOARD_PASSWORD", "change-this-password")
 
@@ -97,6 +98,10 @@ class ContextBody(BaseModel):
 
 class ChatBody(BaseModel):
     message: str
+
+
+class MaintenanceBody(BaseModel):
+    enabled: bool
 
 
 def _read_json(path: Path) -> list[dict[str, Any]]:
@@ -287,3 +292,20 @@ def chat(body: ChatBody) -> dict[str, str]:
         )
 
     return {"reply": "\n".join(summary)}
+
+
+@app.get("/maintenance")
+def get_maintenance() -> dict[str, bool]:
+    if MAINTENANCE_PATH.exists():
+        with MAINTENANCE_PATH.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return {"enabled": bool(data.get("enabled", False))}
+    return {"enabled": False}
+
+
+@app.post("/maintenance", dependencies=[Depends(_require_token)])
+def set_maintenance(body: MaintenanceBody) -> dict[str, bool]:
+    MAINTENANCE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with MAINTENANCE_PATH.open("w", encoding="utf-8") as f:
+        json.dump({"enabled": body.enabled}, f)
+    return {"enabled": body.enabled}
