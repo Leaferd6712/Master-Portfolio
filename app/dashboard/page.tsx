@@ -4,7 +4,7 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 import TaskStatusBadge from "@/components/dashboard/TaskStatusBadge";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Project } from "@/components/ProjectCard";
-import { addTask, getMaintenanceMode, getProjects, getTasks, setMaintenanceMode, Task } from "@/lib/api";
+import { addTask, getProjects, getTasks, Task } from "@/lib/api";
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -17,20 +17,15 @@ export default function DashboardPage() {
   const [taskPriority, setTaskPriority] = useState<Task["priority"]>("medium");
   const [taskMonth, setTaskMonth] = useState("May");
 
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
-  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
-
   useEffect(() => {
     async function load() {
       try {
-        const [tasksRes, projectsRes, maintenanceRes] = await Promise.all([
+        const [tasksRes, projectsRes] = await Promise.all([
           getTasks(),
           getProjects(),
-          getMaintenanceMode(),
         ]);
         setTasks(tasksRes);
         setProjects(projectsRes);
-        setMaintenanceEnabled(maintenanceRes.enabled);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load dashboard";
         setError(msg);
@@ -42,7 +37,8 @@ export default function DashboardPage() {
     void load();
   }, []);
 
-  async function handleAddTask(e: FormEvent<HTMLFormElement>) {    e.preventDefault();
+  async function handleAddTask(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (!taskTitle.trim()) return;
 
     try {
@@ -62,20 +58,6 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleToggleMaintenance() {
-    setMaintenanceLoading(true);
-    try {
-      const result = await setMaintenanceMode(!maintenanceEnabled);
-      setMaintenanceEnabled(result.enabled);
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to update maintenance mode";
-      setError(msg);
-    } finally {
-      setMaintenanceLoading(false);
-    }
-  }
-
   const activeTasks = tasks.filter((task) => task.status !== "done");
   const activeProjects = useMemo(
     () => projects.filter((project) => project.status !== "finished"),
@@ -92,39 +74,6 @@ export default function DashboardPage() {
           {error}
         </div>
       ) : null}
-
-      {/* Maintenance Mode Toggle */}
-      <div
-        className={`mb-8 rounded-2xl border p-5 flex items-center justify-between gap-4 ${
-          maintenanceEnabled
-            ? "border-red-500/40 bg-red-500/10"
-            : "border-zinc-800 bg-zinc-900"
-        }`}
-      >
-        <div>
-          <p className="font-semibold text-white">Maintenance Mode</p>
-          <p className="mt-1 text-sm text-zinc-400">
-            {maintenanceEnabled
-              ? "Site is DOWN — visitors see a maintenance page."
-              : "Site is LIVE — visitors can see your portfolio."}
-          </p>
-        </div>
-        <button
-          onClick={handleToggleMaintenance}
-          disabled={maintenanceLoading}
-          className={`shrink-0 rounded-xl px-5 py-2.5 font-semibold text-sm transition-colors disabled:opacity-50 ${
-            maintenanceEnabled
-              ? "bg-red-600 hover:bg-red-500 text-white"
-              : "bg-zinc-700 hover:bg-zinc-600 text-white"
-          }`}
-        >
-          {maintenanceLoading
-            ? "Updating…"
-            : maintenanceEnabled
-            ? "Turn OFF"
-            : "Turn ON"}
-        </button>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">

@@ -129,24 +129,6 @@ export async function deleteTask(id: string): Promise<void> {
   await readJson<Record<string, string>>(res);
 }
 
-// ── Maintenance ───────────────────────────────────────────────────────────────
-
-export async function getMaintenanceMode(): Promise<{ enabled: boolean }> {
-  const res = await fetch("/api/maintenance", { cache: "no-store" });
-  return readJson<{ enabled: boolean }>(res);
-}
-
-export async function setMaintenanceMode(
-  enabled: boolean
-): Promise<{ enabled: boolean }> {
-  const res = await fetch("/api/maintenance", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ enabled }),
-  });
-  return readJson<{ enabled: boolean }>(res);
-}
-
 // ── Context.md ────────────────────────────────────────────────────────────────
 
 export async function getContext(): Promise<string> {
