@@ -7,10 +7,11 @@ import {
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const body = await req.text();
-  const backendRes = await fetch(toBackendUrl(`/tasks/${params.id}`), {
+  const backendRes = await fetch(toBackendUrl(`/tasks/${id}`), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -26,9 +27,10 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const backendRes = await fetch(toBackendUrl(`/tasks/${params.id}`), {
+  const { id } = await params;
+  const backendRes = await fetch(toBackendUrl(`/tasks/${id}`), {
     method: "DELETE",
     headers: {
       ...getAuthHeaderFromCookie(),
