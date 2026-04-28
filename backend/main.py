@@ -19,6 +19,9 @@ DATA_DIR = ROOT / "data"
 PROJECTS_PATH = DATA_DIR / "projects.json"
 TASKS_PATH = DATA_DIR / "tasks.json"
 CONTEXT_PATH = DATA_DIR / "context.md"
+MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
+
+DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."
 
 PASSWORD = os.getenv("DASHBOARD_PASSWORD", "change-this-password")
 
@@ -99,6 +102,11 @@ class ChatBody(BaseModel):
     message: str
 
 
+class MaintenanceBody(BaseModel):
+    enabled: bool
+    message: str = DEFAULT_MAINTENANCE_MESSAGE
+
+
 def _read_json(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -119,12 +127,28 @@ def _token_from_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
-def _require_token(authorization: str | None = Header(default=None)) -> str:
+def _token_from_authorization(authorization: str | None) -> str | None:
     if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    return authorization.split(" ", 1)[1].strip()
+
+
+def _is_valid_token(token: str | None) -> bool:
+    if not token:
+        return False
+    return token == _token_from_password(PASSWORD)
+
+
+def _has_valid_auth_header(authorization: str | None) -> bool:
+    return _is_valid_token(_token_from_authorization(authorization))
+
+
+def _require_token(authorization: str | None = Header(default=None)) -> str:
+    token = _token_from_authorization(authorization)
+    if not token:
         raise HTTPException(status_code=401, detail="Missing auth token")
 
-    token = authorization.split(" ", 1)[1].strip()
-    if token != _token_from_password(PASSWORD):
+    if not _is_valid_token(token):
         raise HTTPException(status_code=401, detail="Invalid auth token")
 
     return token
@@ -159,6 +183,36 @@ def _next_task_id(tasks: list[dict[str, Any]]) -> str:
     return str((max(numeric_ids) + 1) if numeric_ids else 1)
 
 
+def _read_maintenance() -> dict[str, Any]:
+    default_state = {
+        "enabled": False,
+        "message": DEFAULT_MAINTENANCE_MESSAGE,
+    }
+
+    if not MAINTENANCE_PATH.exists():
+        return default_state
+
+    with MAINTENANCE_PATH.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    if not isinstance(data, dict):
+        return default_state
+
+    enabled = data.get("enabled")
+    message = data.get("message")
+
+    return {
+        "enabled": bool(enabled),
+        "message": message.strip() if isinstance(message, str) and message.strip() else DEFAULT_MAINTENANCE_MESSAGE,
+    }
+
+
+def _write_maintenance(data: dict[str, Any]) -> None:
+    MAINTENANCE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with MAINTENANCE_PATH.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
 @app.get("/")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "portfolio-backend"}
@@ -171,8 +225,26 @@ def login(body: LoginBody) -> dict[str, str]:
     return {"token": _token_from_password(body.password)}
 
 
+@app.get("/maintenance")
+def get_maintenance() -> dict[str, Any]:
+    return _read_maintenance()
+
+
+@app.put("/maintenance", dependencies=[Depends(_require_token)])
+def update_maintenance(body: MaintenanceBody) -> dict[str, Any]:
+    payload = {
+        "enabled": body.enabled,
+        "message": body.message.strip() if body.message.strip() else DEFAULT_MAINTENANCE_MESSAGE,
+    }
+    _write_maintenance(payload)
+    return payload
+
+
 @app.get("/projects")
-def get_projects() -> list[dict[str, Any]]:
+def get_projects(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+    maintenance = _read_maintenance()
+    if maintenance.get("enabled") and not _has_valid_auth_header(authorization):
+        raise HTTPException(status_code=503, detail=str(maintenance.get("message", DEFAULT_MAINTENANCE_MESSAGE)))
     return _read_json(PROJECTS_PATH)
 
 

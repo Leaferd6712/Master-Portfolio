@@ -23,6 +23,11 @@ export interface Task {
   notes: string;
 }
 
+export interface MaintenanceMode {
+  enabled: boolean;
+  message: string;
+}
+
 async function readJson<T>(res: Response): Promise<T> {
   let payload: unknown = null;
   try {
@@ -157,4 +162,23 @@ export async function sendChatMessage(
     body: JSON.stringify({ message }),
   });
   return readJson<{ reply: string }>(res);
+}
+
+// ── Maintenance ──────────────────────────────────────────────────────────────
+
+export async function getMaintenanceMode(): Promise<MaintenanceMode> {
+  const res = await fetch("/api/maintenance", { cache: "no-store" });
+  return readJson<MaintenanceMode>(res);
+}
+
+export async function updateMaintenanceMode(
+  enabled: boolean,
+  message = "Website is currently down. Please come back later."
+): Promise<MaintenanceMode> {
+  const res = await fetch("/api/maintenance", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled, message }),
+  });
+  return readJson<MaintenanceMode>(res);
 }
