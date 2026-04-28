@@ -27,7 +27,7 @@ export default function Navbar() {
           href="/"
           className="text-white font-bold text-xl tracking-tight hover:opacity-80 transition-opacity"
         >
-          YourName<span className="text-sky-400">.</span>
+          Mathias<span className="text-sky-400">.</span>
         </Link>
 
         {/* Desktop nav */}

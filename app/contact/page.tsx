@@ -1,14 +1,14 @@
 const contactLinks = [
   {
     label: "GitHub",
-    href: "https://github.com/yourusername",
+    href: "https://github.com/Leaferd6712",
     icon: "🐙",
     desc: "See all my code and projects",
     external: true,
   },
   {
     label: "Email",
-    href: "mailto:your@email.com",
+    href: "mailto:mcmathiaspang@gmail.com",
     icon: "📧",
     desc: "Best way to reach me directly",
     external: false,
