@@ -51,7 +51,7 @@ export default function HomePage() {
           Hello, I&apos;m
         </p>
         <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight">
-          YourName
+          YourName BIGGG
         </h1>
         <p className="mt-5 text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed">
           Building at the intersection of AI, robotics, and software — one
