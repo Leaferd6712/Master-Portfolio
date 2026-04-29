@@ -55,6 +55,7 @@ class ProjectBase(BaseModel):
     demo: str = ""
     image: str = ""
     techs: list[str] = Field(default_factory=list)
+    progress: int = 0
 
 
 class ProjectCreate(ProjectBase):
@@ -70,6 +71,7 @@ class ProjectUpdate(BaseModel):
     demo: str | None = None
     image: str | None = None
     techs: list[str] | None = None
+    progress: int | None = None
 
 
 class TaskBase(BaseModel):

@@ -10,6 +10,18 @@ export interface Project {
   demo?: string;
   image?: string;
   techs: string[];
+  progress?: number; // 0-100
+}
+
+function progressLabel(pct: number): string {
+  if (pct === 0) return "Not started";
+  if (pct <= 15) return "Just started";
+  if (pct <= 35) return "Early stages";
+  if (pct <= 55) return "Halfway there";
+  if (pct <= 75) return "Good progress";
+  if (pct <= 90) return "Almost done";
+  if (pct < 100) return "Final touches";
+  return "Complete!";
 }
 
 const statusStyles: Record<string, string> = {
@@ -93,6 +105,22 @@ export default function ProjectCard({ project }: { project: Project }) {
             </span>
           ))}
         </div>
+
+        {/* Progress bar */}
+        {typeof project.progress === "number" && project.progress > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">{progressLabel(project.progress)}</span>
+              <span className="text-zinc-300 font-medium tabular-nums">{project.progress}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-500"
+                style={{ width: `${project.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Links */}
         <div className="flex gap-4 mt-auto pt-1">
