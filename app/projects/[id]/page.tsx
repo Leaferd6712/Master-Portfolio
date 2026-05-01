@@ -92,16 +92,37 @@ export default function ProjectDetailPage() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-4">
-            {project.github && (
-              <Link href={project.github} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white hover:bg-sky-400 transition-colors">
-                View GitHub
-              </Link>
-            )}
-            {project.demo && (
-              <Link href={project.demo} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-zinc-700 px-5 py-3 font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors">
-                Open Demo
-              </Link>
-            )}
+            {/* Prefer new links array; fall back to legacy github/demo */}
+            {project.links && project.links.length > 0
+              ? project.links
+                  .filter((l) => l.url)
+                  .map((l, i) => (
+                    <Link
+                      key={l.label + i}
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={i === 0
+                        ? "rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white hover:bg-sky-400 transition-colors"
+                        : "rounded-xl border border-zinc-700 px-5 py-3 font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"}
+                    >
+                      {l.label}
+                    </Link>
+                  ))
+              : (
+                <>
+                  {project.github && (
+                    <Link href={project.github} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white hover:bg-sky-400 transition-colors">
+                      View GitHub
+                    </Link>
+                  )}
+                  {project.demo && (
+                    <Link href={project.demo} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-zinc-700 px-5 py-3 font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors">
+                      Open Demo
+                    </Link>
+                  )}
+                </>
+              )}
           </div>
         </div>
       </div>

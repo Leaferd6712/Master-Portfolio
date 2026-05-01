@@ -1,13 +1,21 @@
 import Link from "next/link";
 
+export interface ProjectLink {
+  label: string;
+  url: string;
+}
+
 export interface Project {
   id: string;
   title: string;
   description: string;
   category: string;
-  status: "finished" | "in progress" | "planned";
+  status: string;
+  /** Legacy fields kept for backward compatibility */
   github?: string;
   demo?: string;
+  /** Flexible links list (replaces github/demo for new projects) */
+  links?: ProjectLink[];
   image?: string;
   techs: string[];
   progress?: number; // 0-100
@@ -32,6 +40,12 @@ const statusStyles: Record<string, string> = {
   planned:
     "bg-zinc-700/40 text-zinc-400 border border-zinc-600/30",
 };
+
+const DEFAULT_STATUS_STYLE = "bg-violet-500/15 text-violet-300 border border-violet-500/25";
+
+function getStatusStyle(status: string): string {
+  return statusStyles[status] ?? DEFAULT_STATUS_STYLE;
+}
 
 export default function ProjectCard({ project }: { project: Project }) {
   return (
@@ -81,9 +95,7 @@ export default function ProjectCard({ project }: { project: Project }) {
             </Link>
           </h3>
           <span
-            className={`text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${
-              statusStyles[project.status] ?? statusStyles.planned
-            }`}
+            className={`text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${getStatusStyle(project.status)}`}
           >
             {project.status}
           </span>
@@ -123,33 +135,52 @@ export default function ProjectCard({ project }: { project: Project }) {
         )}
 
         {/* Links */}
-        <div className="flex gap-4 mt-auto pt-1">
+        <div className="flex flex-wrap gap-4 mt-auto pt-1">
           <Link
             href={`/projects/${project.id}`}
             className="text-sm text-zinc-300 hover:text-white transition-colors font-medium"
           >
             Details →
           </Link>
-          {project.github && (
-            <Link
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-sky-400 hover:text-sky-300 transition-colors font-medium"
-            >
-              GitHub →
-            </Link>
-          )}
-          {project.demo && (
-            <Link
-              href={project.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
-            >
-              Live Demo →
-            </Link>
-          )}
+          {/* Prefer new links array; fall back to legacy github/demo */}
+          {project.links && project.links.length > 0
+            ? project.links
+                .filter((l) => l.url)
+                .map((l) => (
+                  <Link
+                    key={l.label}
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-sky-400 hover:text-sky-300 transition-colors font-medium"
+                  >
+                    {l.label} →
+                  </Link>
+                ))
+            : (
+              <>
+                {project.github && (
+                  <Link
+                    href={project.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-sky-400 hover:text-sky-300 transition-colors font-medium"
+                  >
+                    GitHub →
+                  </Link>
+                )}
+                {project.demo && (
+                  <Link
+                    href={project.demo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                  >
+                    Live Demo →
+                  </Link>
+                )}
+              </>
+            )}
         </div>
       </div>
     </div>

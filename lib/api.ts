@@ -7,11 +7,11 @@
  * Those handlers proxy to FastAPI and attach auth from httpOnly cookies.
  */
 
-import type { Project } from "@/components/ProjectCard";
+import type { Project, ProjectLink } from "@/components/ProjectCard";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type { Project };
+export type { Project, ProjectLink };
 
 export interface Task {
   id: string;

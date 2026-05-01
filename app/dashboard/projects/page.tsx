@@ -2,7 +2,7 @@
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import type { Project } from "@/components/ProjectCard";
+import type { Project, ProjectLink } from "@/components/ProjectCard";
 import {
   addProject,
   deleteProject,
@@ -46,6 +46,11 @@ const PRESET_LABELS = [
   { pct: 100, label: "Complete!" },
 ];
 
+const DEFAULT_LINKS: ProjectLink[] = [
+  { label: "GitHub", url: "" },
+  { label: "Demo", url: "" },
+];
+
 export default function DashboardProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,13 +60,24 @@ export default function DashboardProjectsPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Games");
-  const [status, setStatus] = useState<Project["status"]>("planned");
-  const [github, setGithub] = useState("");
-  const [demo, setDemo] = useState("");
+  const [status, setStatus] = useState("planned");
+  const [links, setLinks] = useState<ProjectLink[]>(DEFAULT_LINKS);
   const [techs, setTechs] = useState("");
   const [progress, setProgress] = useState(0);
   const [imagePreview, setImagePreview] = useState("");
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  function updateLink(idx: number, field: keyof ProjectLink, value: string) {
+    setLinks((prev) => prev.map((l, i) => (i === idx ? { ...l, [field]: value } : l)));
+  }
+
+  function removeLink(idx: number) {
+    setLinks((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function addLink() {
+    setLinks((prev) => [...prev, { label: "", url: "" }]);
+  }
 
   useEffect(() => {
     async function load() {
@@ -89,8 +105,7 @@ export default function DashboardProjectsPage() {
         description: description.trim(),
         category,
         status,
-        github: github.trim(),
-        demo: demo.trim(),
+        links: links.filter((l) => l.url.trim()),
         image: imagePreview,
         progress,
         techs: techs
@@ -101,8 +116,7 @@ export default function DashboardProjectsPage() {
       setProjects((prev) => [created, ...prev]);
       setTitle("");
       setDescription("");
-      setGithub("");
-      setDemo("");
+      setLinks(DEFAULT_LINKS);
       setTechs("");
       setProgress(0);
       setImagePreview("");
@@ -189,28 +203,63 @@ export default function DashboardProjectsPage() {
                 <option value="Backend">Backend</option>
                 <option value="Tools">Tools</option>
               </select>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as Project["status"])}
-                className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-300"
-              >
-                <option value="planned">planned</option>
-                <option value="in progress">in progress</option>
-                <option value="finished">finished</option>
-              </select>
+              <>
+                <input
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  list="status-presets"
+                  className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-300"
+                  placeholder="Status"
+                />
+                <datalist id="status-presets">
+                  <option value="planned" />
+                  <option value="in progress" />
+                  <option value="finished" />
+                </datalist>
+              </>
             </div>
-            <input
-              value={github}
-              onChange={(e) => setGithub(e.target.value)}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
-              placeholder="GitHub link"
-            />
-            <input
-              value={demo}
-              onChange={(e) => setDemo(e.target.value)}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
-              placeholder="Demo link"
-            />
+
+            {/* Links */}
+            <div className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-400 font-medium">Links</span>
+                <button
+                  type="button"
+                  onClick={addLink}
+                  className="text-xs text-sky-400 hover:text-sky-300 transition-colors"
+                >
+                  + Add link
+                </button>
+              </div>
+              {links.length === 0 && (
+                <p className="text-xs text-zinc-600">No links — click "+ Add link" to add one.</p>
+              )}
+              {links.map((link, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <input
+                    value={link.label}
+                    onChange={(e) => updateLink(idx, "label", e.target.value)}
+                    className="w-28 shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
+                    placeholder="Label"
+                  />
+                  <input
+                    value={link.url}
+                    onChange={(e) => updateLink(idx, "url", e.target.value)}
+                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
+                    placeholder="https://..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLink(idx)}
+                    className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors px-1 text-sm"
+                    title="Remove link"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
             <input
               value={techs}
               onChange={(e) => setTechs(e.target.value)}
@@ -343,17 +392,22 @@ export default function DashboardProjectsPage() {
                       <p className="text-zinc-500 text-xs mt-0.5">{project.category}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <select
-                        value={project.status}
-                        onChange={(e) =>
-                          void onFieldUpdate(project.id, { status: e.target.value as Project["status"] })
-                        }
-                        className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-300"
-                      >
-                        <option value="planned">planned</option>
-                        <option value="in progress">in progress</option>
-                        <option value="finished">finished</option>
-                      </select>
+                      <>
+                        <input
+                          value={project.status}
+                          onChange={(e) =>
+                            void onFieldUpdate(project.id, { status: e.target.value })
+                          }
+                          list={`status-presets-${project.id}`}
+                          className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-300 w-32"
+                          placeholder="Status"
+                        />
+                        <datalist id={`status-presets-${project.id}`}>
+                          <option value="planned" />
+                          <option value="in progress" />
+                          <option value="finished" />
+                        </datalist>
+                      </>
                       <button
                         type="button"
                         onClick={() => void onDeleteProject(project.id)}
@@ -457,6 +511,18 @@ export default function DashboardProjectsPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Links editor */}
+                  <InlineLinksEditor
+                    projectId={project.id}
+                    links={project.links ?? (
+                      [
+                        ...(project.github ? [{ label: "GitHub", url: project.github }] : [{ label: "GitHub", url: "" }]),
+                        ...(project.demo ? [{ label: "Demo", url: project.demo }] : [{ label: "Demo", url: "" }]),
+                      ]
+                    )}
+                    onSave={(newLinks) => void onFieldUpdate(project.id, { links: newLinks })}
+                  />
                 </div>
               );
             })}
@@ -464,5 +530,92 @@ export default function DashboardProjectsPage() {
         </div>
       </div>
     </DashboardShell>
+  );
+}
+
+// ── Inline links editor sub-component ────────────────────────────────────────
+function InlineLinksEditor({
+  projectId,
+  links: initialLinks,
+  onSave,
+}: {
+  projectId: string;
+  links: ProjectLink[];
+  onSave: (links: ProjectLink[]) => void;
+}) {
+  const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
+  const [dirty, setDirty] = useState(false);
+
+  function updateLink(idx: number, field: keyof ProjectLink, value: string) {
+    setLinks((prev) => prev.map((l, i) => (i === idx ? { ...l, [field]: value } : l)));
+    setDirty(true);
+  }
+
+  function removeLink(idx: number) {
+    setLinks((prev) => prev.filter((_, i) => i !== idx));
+    setDirty(true);
+  }
+
+  function addLink() {
+    setLinks((prev) => [...prev, { label: "", url: "" }]);
+    setDirty(true);
+  }
+
+  function save() {
+    onSave(links.filter((l) => l.label.trim() || l.url.trim()));
+    setDirty(false);
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-zinc-400">Links</span>
+        <div className="flex gap-3">
+          {dirty && (
+            <button
+              type="button"
+              onClick={save}
+              className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+            >
+              Save links
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={addLink}
+            className="text-xs text-sky-400 hover:text-sky-300 transition-colors"
+          >
+            + Add link
+          </button>
+        </div>
+      </div>
+      {links.length === 0 && (
+        <p className="text-xs text-zinc-600">No links.</p>
+      )}
+      {links.map((link, idx) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <input
+            value={link.label}
+            onChange={(e) => updateLink(idx, "label", e.target.value)}
+            className="w-24 shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-white placeholder:text-zinc-600"
+            placeholder="Label"
+          />
+          <input
+            value={link.url}
+            onChange={(e) => updateLink(idx, "url", e.target.value)}
+            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-white placeholder:text-zinc-600"
+            placeholder="https://..."
+          />
+          <button
+            type="button"
+            onClick={() => removeLink(idx)}
+            className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors text-xs px-1"
+            title="Remove link"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
   );
 }

@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+import requests
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +25,12 @@ MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
 DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."
 
 PASSWORD = os.getenv("DASHBOARD_PASSWORD", "change-this-password")
+
+# GitHub sync configuration
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
+GITHUB_REPO = os.getenv("GITHUB_REPO")
+GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main")
 
 app = FastAPI(title="Portfolio Backend", version="1.0.0")
 
@@ -53,6 +60,7 @@ class ProjectBase(BaseModel):
     status: str
     github: str = ""
     demo: str = ""
+    links: list[dict[str, str]] = Field(default_factory=list)
     image: str = ""
     techs: list[str] = Field(default_factory=list)
     progress: int = 0
@@ -69,6 +77,7 @@ class ProjectUpdate(BaseModel):
     status: str | None = None
     github: str | None = None
     demo: str | None = None
+    links: list[dict[str, str]] | None = None
     image: str | None = None
     techs: list[str] | None = None
     progress: int | None = None
@@ -123,6 +132,54 @@ def _write_json(path: Path, data: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+
+
+def _push_to_github() -> bool:
+    """Push projects.json to GitHub. Returns True if successful, False if disabled or failed."""
+    if not all([GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO]):
+        # GitHub sync is optional - just return silently if not configured
+        return False
+    
+    try:
+        # Read current projects.json
+        with open(PROJECTS_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # GitHub API endpoint
+        api_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{GITHUB_REPO}/contents/backend/data/projects.json"
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+        
+        # Get current file SHA (needed for updates)
+        get_response = requests.get(api_url, headers=headers, timeout=10)
+        sha = get_response.json().get("sha") if get_response.status_code == 200 else None
+        
+        # Prepare commit message
+        message = "Auto-sync: Update projects.json from dashboard"
+        
+        # Prepare payload
+        payload = {
+            "message": message,
+            "content": __import__("base64").b64encode(content.encode()).decode(),
+            "branch": GITHUB_BRANCH,
+        }
+        if sha:
+            payload["sha"] = sha
+        
+        # Push to GitHub
+        push_response = requests.put(api_url, json=payload, headers=headers, timeout=10)
+        
+        if push_response.status_code in [200, 201]:
+            print(f"✓ GitHub sync successful: {message}")
+            return True
+        else:
+            print(f"✗ GitHub sync failed: {push_response.status_code} - {push_response.text}")
+            return False
+    except Exception as e:
+        print(f"✗ GitHub sync error: {e}")
+        return False
 
 
 def _token_from_password(password: str) -> str:
@@ -257,6 +314,7 @@ def add_project(body: ProjectCreate) -> dict[str, Any]:
     item["id"] = _next_project_id(body.title, projects)
     projects.append(item)
     _write_json(PROJECTS_PATH, projects)
+    _push_to_github()  # Auto-sync to GitHub
     return item
 
 
@@ -270,6 +328,7 @@ def update_project(project_id: str, body: ProjectUpdate) -> dict[str, Any]:
             updated = {**item, **patch}
             projects[index] = updated
             _write_json(PROJECTS_PATH, projects)
+            _push_to_github()  # Auto-sync to GitHub
             return updated
 
     raise HTTPException(status_code=404, detail="Project not found")
@@ -284,6 +343,7 @@ def remove_project(project_id: str) -> dict[str, str]:
         raise HTTPException(status_code=404, detail="Project not found")
 
     _write_json(PROJECTS_PATH, next_projects)
+    _push_to_github()  # Auto-sync to GitHub
     return {"ok": "true"}
 
 
