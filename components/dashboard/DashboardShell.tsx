@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LogoutButton from "@/components/dashboard/LogoutButton";
 import MaintenanceToggle from "@/components/dashboard/MaintenanceToggle";
+import DownloadDataButton from "@/components/dashboard/DownloadDataButton";
 
 const dashboardLinks = [
   { href: "/dashboard", label: "Overview" },
@@ -40,6 +41,7 @@ export default function DashboardShell({
           </nav>
           <div className="mt-6 pt-6 border-t border-zinc-800 space-y-4">
             <MaintenanceToggle />
+            <DownloadDataButton />
             <LogoutButton />
           </div>
         </aside>

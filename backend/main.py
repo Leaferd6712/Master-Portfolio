@@ -469,3 +469,36 @@ def chat(body: ChatBody) -> dict[str, str]:
         )
 
     return {"reply": "\n".join(summary)}
+
+
+@app.get("/download-data", dependencies=[Depends(_require_token)])
+def download_data():
+    """Create a zip of backend data files and return it for download.
+
+    Requires valid auth token (dashboard admin).
+    """
+    import io
+    import zipfile
+    from fastapi.responses import StreamingResponse
+
+    files = []
+    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, MAINTENANCE_PATH):
+        try:
+            if p.exists():
+                files.append(p)
+        except Exception:
+            # ignore path errors
+            continue
+
+    if not files:
+        raise HTTPException(status_code=404, detail="No data files found")
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in files:
+            # Add each file to the archive using only the filename
+            z.write(str(p), arcname=p.name)
+
+    buf.seek(0)
+    headers = {"Content-Disposition": 'attachment; filename="portfolio-data.zip"'}
+    return StreamingResponse(buf, media_type="application/zip", headers=headers)
