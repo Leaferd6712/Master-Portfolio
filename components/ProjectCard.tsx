@@ -11,6 +11,7 @@ export interface Project {
   description: string;
   category: string;
   status: string;
+  hiddenNotes?: string;
   /** Legacy fields kept for backward compatibility */
   github?: string;
   demo?: string;

@@ -64,6 +64,7 @@ class ProjectBase(BaseModel):
     image: str = ""
     techs: list[str] = Field(default_factory=list)
     progress: int = 0
+    hiddenNotes: str = ""
 
 
 class ProjectCreate(ProjectBase):
@@ -81,6 +82,7 @@ class ProjectUpdate(BaseModel):
     image: str | None = None
     techs: list[str] | None = None
     progress: int | None = None
+    hiddenNotes: str | None = None
 
 
 class TaskBase(BaseModel):
@@ -302,9 +304,21 @@ def update_maintenance(body: MaintenanceBody) -> dict[str, Any]:
 @app.get("/projects")
 def get_projects(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
     maintenance = _read_maintenance()
-    if maintenance.get("enabled") and not _has_valid_auth_header(authorization):
+    is_admin = _has_valid_auth_header(authorization)
+    if maintenance.get("enabled") and not is_admin:
         raise HTTPException(status_code=503, detail=str(maintenance.get("message", DEFAULT_MAINTENANCE_MESSAGE)))
-    return _read_json(PROJECTS_PATH)
+
+    projects = _read_json(PROJECTS_PATH)
+    if is_admin:
+        return projects
+
+    # Never expose internal planning notes to public clients.
+    public_projects: list[dict[str, Any]] = []
+    for item in projects:
+        sanitized = dict(item)
+        sanitized.pop("hiddenNotes", None)
+        public_projects.append(sanitized)
+    return public_projects
 
 
 @app.post("/projects", dependencies=[Depends(_require_token)])

@@ -59,6 +59,7 @@ export default function DashboardProjectsPage() {
   // Add-form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [hiddenNotes, setHiddenNotes] = useState("");
   const [category, setCategory] = useState("Games");
   const [status, setStatus] = useState("planned");
   const [links, setLinks] = useState<ProjectLink[]>(DEFAULT_LINKS);
@@ -103,6 +104,7 @@ export default function DashboardProjectsPage() {
       const created = await addProject({
         title: title.trim(),
         description: description.trim(),
+        hiddenNotes: hiddenNotes.trim(),
         category,
         status,
         links: links.filter((l) => l.url.trim()),
@@ -116,6 +118,7 @@ export default function DashboardProjectsPage() {
       setProjects((prev) => [created, ...prev]);
       setTitle("");
       setDescription("");
+      setHiddenNotes("");
       setLinks(DEFAULT_LINKS);
       setTechs("");
       setProgress(0);
@@ -190,6 +193,12 @@ export default function DashboardProjectsPage() {
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-28 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
               placeholder="Project description"
+            />
+            <textarea
+              value={hiddenNotes}
+              onChange={(e) => setHiddenNotes(e.target.value)}
+              className="min-h-24 w-full rounded-xl border border-amber-500/30 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
+              placeholder="Hidden from public notes"
             />
             <div className="grid grid-cols-2 gap-3">
               <select
@@ -510,6 +519,26 @@ export default function DashboardProjectsPage() {
                         )}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Hidden admin notes */}
+                  <div className="space-y-1.5">
+                    <span className="text-xs text-zinc-400">Hidden from public notes</span>
+                    <textarea
+                      value={project.hiddenNotes ?? ""}
+                      onChange={(e) =>
+                        setProjects((prev) =>
+                          prev.map((p) =>
+                            p.id === project.id ? { ...p, hiddenNotes: e.target.value } : p
+                          )
+                        )
+                      }
+                      onBlur={(e) =>
+                        void onFieldUpdate(project.id, { hiddenNotes: e.target.value })
+                      }
+                      className="min-h-24 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
+                      placeholder="Hidden from public notes"
+                    />
                   </div>
 
                   {/* Links editor */}
