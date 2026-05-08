@@ -136,31 +136,28 @@ def _write_json(path: Path, data: list[dict[str, Any]]) -> None:
         json.dump(data, f, indent=2)
 
 
-def _push_to_github() -> bool:
-    """Push projects.json to GitHub. Returns True if successful, False if disabled or failed."""
+def _push_file_to_github(local_path: Path, repo_path: str, message: str) -> bool:
+    """Push a local file to GitHub. Returns True if successful, False if disabled or failed."""
     if not all([GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO]):
         # GitHub sync is optional - just return silently if not configured
         return False
-    
+
     try:
-        # Read current projects.json
-        with open(PROJECTS_PATH, "r", encoding="utf-8") as f:
+        # Read current local file content
+        with open(local_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         # GitHub API endpoint
-        api_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{GITHUB_REPO}/contents/backend/data/projects.json"
+        api_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{GITHUB_REPO}/contents/{repo_path}"
         headers = {
             "Authorization": f"token {GITHUB_TOKEN}",
             "Accept": "application/vnd.github.v3+json",
         }
-        
+
         # Get current file SHA (needed for updates)
         get_response = requests.get(api_url, headers=headers, timeout=10)
         sha = get_response.json().get("sha") if get_response.status_code == 200 else None
-        
-        # Prepare commit message
-        message = "Auto-sync: Update projects.json from dashboard"
-        
+
         # Prepare payload
         payload = {
             "message": message,
@@ -169,10 +166,10 @@ def _push_to_github() -> bool:
         }
         if sha:
             payload["sha"] = sha
-        
+
         # Push to GitHub
         push_response = requests.put(api_url, json=payload, headers=headers, timeout=10)
-        
+
         if push_response.status_code in [200, 201]:
             print(f"✓ GitHub sync successful: {message}")
             return True
@@ -182,6 +179,38 @@ def _push_to_github() -> bool:
     except Exception as e:
         print(f"✗ GitHub sync error: {e}")
         return False
+
+
+def _push_projects_to_github() -> bool:
+    return _push_file_to_github(
+        PROJECTS_PATH,
+        "backend/data/projects.json",
+        "Auto-sync: Update projects.json from dashboard",
+    )
+
+
+def _push_tasks_to_github() -> bool:
+    return _push_file_to_github(
+        TASKS_PATH,
+        "backend/data/tasks.json",
+        "Auto-sync: Update tasks.json from dashboard",
+    )
+
+
+def _push_context_to_github() -> bool:
+    return _push_file_to_github(
+        CONTEXT_PATH,
+        "backend/data/context.md",
+        "Auto-sync: Update context.md from dashboard",
+    )
+
+
+def _push_maintenance_to_github() -> bool:
+    return _push_file_to_github(
+        MAINTENANCE_PATH,
+        "backend/data/maintenance.json",
+        "Auto-sync: Update maintenance.json from dashboard",
+    )
 
 
 def _token_from_password(password: str) -> str:
@@ -298,6 +327,7 @@ def update_maintenance(body: MaintenanceBody) -> dict[str, Any]:
         "message": body.message.strip() if body.message.strip() else DEFAULT_MAINTENANCE_MESSAGE,
     }
     _write_maintenance(payload)
+    _push_maintenance_to_github()  # Auto-sync to GitHub
     return payload
 
 
@@ -328,7 +358,7 @@ def add_project(body: ProjectCreate) -> dict[str, Any]:
     item["id"] = _next_project_id(body.title, projects)
     projects.append(item)
     _write_json(PROJECTS_PATH, projects)
-    _push_to_github()  # Auto-sync to GitHub
+    _push_projects_to_github()  # Auto-sync to GitHub
     return item
 
 
@@ -342,7 +372,7 @@ def update_project(project_id: str, body: ProjectUpdate) -> dict[str, Any]:
             updated = {**item, **patch}
             projects[index] = updated
             _write_json(PROJECTS_PATH, projects)
-            _push_to_github()  # Auto-sync to GitHub
+            _push_projects_to_github()  # Auto-sync to GitHub
             return updated
 
     raise HTTPException(status_code=404, detail="Project not found")
@@ -357,7 +387,7 @@ def remove_project(project_id: str) -> dict[str, str]:
         raise HTTPException(status_code=404, detail="Project not found")
 
     _write_json(PROJECTS_PATH, next_projects)
-    _push_to_github()  # Auto-sync to GitHub
+    _push_projects_to_github()  # Auto-sync to GitHub
     return {"ok": "true"}
 
 
@@ -373,6 +403,7 @@ def add_task(body: TaskCreate) -> dict[str, Any]:
     item["id"] = _next_task_id(tasks)
     tasks.append(item)
     _write_json(TASKS_PATH, tasks)
+    _push_tasks_to_github()  # Auto-sync to GitHub
     return item
 
 
@@ -386,6 +417,7 @@ def update_task(task_id: str, body: TaskUpdate) -> dict[str, Any]:
             updated = {**item, **patch}
             tasks[index] = updated
             _write_json(TASKS_PATH, tasks)
+            _push_tasks_to_github()  # Auto-sync to GitHub
             return updated
 
     raise HTTPException(status_code=404, detail="Task not found")
@@ -400,6 +432,7 @@ def remove_task(task_id: str) -> dict[str, str]:
         raise HTTPException(status_code=404, detail="Task not found")
 
     _write_json(TASKS_PATH, next_tasks)
+    _push_tasks_to_github()  # Auto-sync to GitHub
     return {"ok": "true"}
 
 
@@ -414,6 +447,7 @@ def get_context() -> dict[str, str]:
 def update_context(body: ContextBody) -> dict[str, str]:
     CONTEXT_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONTEXT_PATH.write_text(body.content, encoding="utf-8")
+    _push_context_to_github()  # Auto-sync to GitHub
     return {"ok": "true"}
 
 
