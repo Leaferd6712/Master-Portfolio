@@ -1,0 +1,551 @@
+[
+  {
+    "title": "Flashcard Maker",
+    "description": "Converts vocab words into a PDF printable flashcards.",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/Flashcard%20Maker/index.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "This is fully done but a ui remap will be good",
+    "id": "flashcard-maker"
+  },
+  {
+    "title": "Quick File Download",
+    "description": "Lets you download .py .yaml and .html files quickly.",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/Quick%20File%20Download.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "quick-file-download"
+  },
+  {
+    "title": "Word Counter",
+    "description": "Counts words and checks grammar, speaking and reading time, and lots more!",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/Word%20Counter.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "Could add more features with api",
+    "id": "word-counter"
+  },
+  {
+    "title": "Blob Game",
+    "description": "A blob that collects coins and changes shape.",
+    "category": "Games",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Beta Version",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/blob.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 25,
+    "hiddenNotes": "This game needs more features.",
+    "id": "blob-game"
+  },
+  {
+    "title": "Calculator Prank",
+    "description": "idk",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/calculator.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "calculator-prank"
+  },
+  {
+    "title": "Connections Webapp",
+    "description": "Shows your connections with different people",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/connections-webapp.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "connections-webapp"
+  },
+  {
+    "title": "Max Screen Text Display",
+    "description": "Shows txt in max size.",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/max-screen-text-display.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "max-screen-text-display"
+  },
+  {
+    "title": "Offline Music Player",
+    "description": "Offline Music Player from mp4, mp3 and more.",
+    "category": "Tools",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Demo",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/offline-music-player.html"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 75,
+    "hiddenNotes": "",
+    "id": "offline-music-player"
+  },
+  {
+    "title": "QuizBlast",
+    "description": "Fun quiz website.",
+    "category": "Tools",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Demo",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/quizblast.html"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 25,
+    "hiddenNotes": "add ai api",
+    "id": "quizblast"
+  },
+  {
+    "title": "Class Timer",
+    "description": "Adds a countdown on the side of your computer on when the class ends and what you have next class.",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/class-timer"
+      },
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/class-timer/"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "class-timer"
+  },
+  {
+    "title": "Mini Market Simulation",
+    "description": "A game that simulates the stock market.",
+    "category": "Games",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/mini-market-simulation/"
+      },
+      {
+        "label": "Github",
+        "url": "https://github.com/Leaferd6712/mini-market-simulation"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 90,
+    "hiddenNotes": "",
+    "id": "mini-market-simulation"
+  },
+  {
+    "title": "Popup Bomb",
+    "description": "Creates 100 popups on your computer.",
+    "category": "Tools",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/popup-bomb"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "Python"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "popup-bomb"
+  },
+  {
+    "title": "Rock Paper Scissors Object Detection YOLOv5",
+    "description": "This uses YOLOv5 Object Detection to track the hand gestures of rock, paper and scissors.",
+    "category": "ML / Vision",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/Rock-Paper-Scissor-Object-Detection-YOLOv5"
+      },
+      {
+        "label": "Demo",
+        "url": "https://github.com/Leaferd6712/Rock-Paper-Scissor-Object-Detection-YOLOv5/blob/master/short.gif"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "Pytorch"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "rock-paper-scissors-object-detection-yolov5"
+  },
+  {
+    "title": "Australian Bills Object Detection YOLOv5",
+    "description": "This detects 5, 10, 20, 50, and 100 dollar bills.",
+    "category": "ML / Vision",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/Australian-Bills-Object-Detection-YOLOv5"
+      },
+      {
+        "label": "Demo",
+        "url": "https://github.com/Leaferd6712/Australian-Bills-Object-Detection-YOLOv5/blob/master/new.gif"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "Pytorch"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "australian-bills-object-detection-yolov5"
+  },
+  {
+    "title": "Human Detection Alarm",
+    "description": "Uses a yolov11 model trained on COCO Dataset to detect humans.",
+    "category": "ML / Vision",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/human-detection-alarm"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "human-detection-alarm"
+  },
+  {
+    "title": "Dodge Master",
+    "description": "A fun arcade game.",
+    "category": "Games",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Webapp",
+        "url": "https://leaferd6712.github.io/dodge-master/"
+      },
+      {
+        "label": "Github",
+        "url": "https://github.com/Leaferd6712/dodge-master"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "dodge-master"
+  },
+  {
+    "title": "Weed or Plant Instance Segmentation",
+    "description": "Uses YOLOv8 Instance Segmentation Model to check if it is a plant or weed.",
+    "category": "ML / Vision",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/weed-or-plant-instance-segmentation"
+      },
+      {
+        "label": "Demo",
+        "url": "https://github.com/Leaferd6712/weed-or-plant-instance-segmentation/blob/main/old.gif"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "Pytorch"
+    ],
+    "progress": 100,
+    "hiddenNotes": "",
+    "id": "weed-or-plant-instance-segmentation"
+  },
+  {
+    "title": "Pothole Instance Segmentation",
+    "description": "Detects potholes in real time",
+    "category": "ML / Vision",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [],
+    "image": "",
+    "techs": [
+      "Pytorch"
+    ],
+    "progress": 25,
+    "hiddenNotes": "Need to make sure it is ready first",
+    "id": "pothole-instance-segmentation"
+  },
+  {
+    "title": "Stellar Siege",
+    "description": "A fun shooter game.",
+    "category": "Games",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Demo",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/stellar-siege.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 25,
+    "hiddenNotes": "finish the game",
+    "id": "stellar-siege"
+  },
+  {
+    "title": "100 Arcade Games",
+    "description": "100 Arcade Games (Some may Double Up)",
+    "category": "Games",
+    "status": "finished",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Demo",
+        "url": "https://leaferd6712.github.io/Master-Portfolio-HTML-Hosting/100-random-arcade-games.html"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 100,
+    "hiddenNotes": "not fully good",
+    "id": "100-arcade-games"
+  },
+  {
+    "title": "Memories Game",
+    "description": "In Progress of Development",
+    "category": "Games",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "Demo",
+        "url": "https://github.com/Leaferd6712/Master-Portfolio-HTML-Hosting/tree/main/Memories%20Game"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "https://github.com/Leaferd6712/Master-Portfolio-HTML-Hosting/tree/main/Memories%20Game",
+    "id": "memories-game"
+  },
+  {
+    "title": "YOLOv5 Auto Model Loader",
+    "description": "Loads YOLOv5 .pt files into actual interference window. Shows all current YOLOv5 Projects.",
+    "category": "ML / Vision",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/YOLOv5-Auto-Model-Loader"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "There should be one version where they can just drop a .pt file and it will work get interference and one of them is where it has like a drop down menu of the object deetcion models i have and whatever it chooses, it runs it then gets interference so all my projects have live demo.",
+    "id": "yolov5-auto-model-loader"
+  },
+  {
+    "title": "YOLOv5 Auto Model Loader",
+    "description": "Loads YOLOv5 .pt files into actual interference window. Shows all current YOLOv5 Projects.",
+    "category": "ML / Vision",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/YOLOv5-Auto-Model-Loader"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "There should be one version where they can just drop a .pt file and it will work get interference and one of them is where it has like a drop down menu of the object deetcion models i have and whatever it chooses, it runs it then gets interference so all my projects have live demo.",
+    "id": "yolov5-auto-model-loader-2"
+  },
+  {
+    "title": "Australian Bill Counter",
+    "description": "Coming Soon.",
+    "category": "ML / Vision",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/Australian-Bill-Counter"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "There are 2 branches ",
+    "id": "australian-bill-counter"
+  },
+  {
+    "title": "KartBlitz",
+    "description": "Fun 2D Car Game",
+    "category": "Games",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/KartBlitz"
+      }
+    ],
+    "image": "",
+    "techs": [
+      "HTML"
+    ],
+    "progress": 50,
+    "hiddenNotes": "",
+    "id": "kartblitz"
+  },
+  {
+    "title": "Student Hub",
+    "description": "A web that has everything a student needs.",
+    "category": "Tools",
+    "status": "in progress",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/Leaferd6712/Student-Hub"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 25,
+    "hiddenNotes": "",
+    "id": "student-hub"
+  }
+]
