@@ -74,6 +74,11 @@ function SortableAllTaskCard({
           <p className="mt-2 text-xs text-zinc-500">
             {task.category} · {task.priority} priority · {task.month}
           </p>
+          {task.startDate || task.endDate ? (
+            <p className="mt-1 text-xs text-zinc-400">
+              {task.startDate ?? ""} — {task.endDate ?? ""}
+            </p>
+          ) : null}
           {task.projectId ? (
             <p className="mt-1 text-[11px] text-sky-300">Linked project task</p>
           ) : null}

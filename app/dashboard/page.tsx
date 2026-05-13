@@ -16,6 +16,8 @@ export default function DashboardPage() {
   const [taskCategory, setTaskCategory] = useState("Backend");
   const [taskPriority, setTaskPriority] = useState<Task["priority"]>("medium");
   const [taskMonth, setTaskMonth] = useState("May");
+  const [taskStartDate, setTaskStartDate] = useState("");
+  const [taskEndDate, setTaskEndDate] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -41,6 +43,10 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!taskTitle.trim()) return;
 
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const startDate = taskStartDate || todayIso;
+    const endDate = taskEndDate || todayIso;
+
     try {
       const created = await addTask({
         title: taskTitle.trim(),
@@ -49,16 +55,35 @@ export default function DashboardPage() {
         category: taskCategory,
         month: taskMonth,
         notes: "",
+        startDate,
+        endDate,
       });
       setTasks((prev) => [created, ...prev]);
       setTaskTitle("");
+      setTaskStartDate("");
+      setTaskEndDate("");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to add task";
       setError(msg);
     }
   }
 
-  const activeTasks = tasks.filter((task) => task.status !== "done");
+  const today = new Date();
+  function isInDateRange(task: Task): boolean {
+    if (!task.startDate && !task.endDate) return true;
+    try {
+      const start = task.startDate ? new Date(task.startDate) : null;
+      const end = task.endDate ? new Date(task.endDate) : null;
+      if (start && end) return start <= today && today <= end;
+      if (start && !end) return start <= today;
+      if (!start && end) return today <= end;
+    } catch {
+      return true;
+    }
+    return true;
+  }
+
+  const activeTasks = tasks.filter((task) => task.status !== "done" && isInDateRange(task));
   const activeProjects = useMemo(
     () => projects.filter((project) => project.status !== "finished"),
     [projects]
@@ -108,6 +133,11 @@ export default function DashboardPage() {
                       <p className="mt-1 text-sm text-zinc-500">
                         {task.category} · {task.priority} priority · {task.month}
                       </p>
+                      {task.startDate || task.endDate ? (
+                        <p className="mt-1 text-xs text-zinc-400">
+                          {task.startDate ?? ""} — {task.endDate ?? ""}
+                        </p>
+                      ) : null}
                     </div>
                     <TaskStatusBadge status={task.status} />
                   </div>
@@ -168,6 +198,32 @@ export default function DashboardPage() {
                 <option>November</option>
                 <option>December</option>
               </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="start-date" className="mb-1 block text-xs text-zinc-400">
+                    Start Date
+                  </label>
+                  <input
+                    id="start-date"
+                    type="date"
+                    value={taskStartDate}
+                    onChange={(e) => setTaskStartDate(e.target.value)}
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-300"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="end-date" className="mb-1 block text-xs text-zinc-400">
+                    End Date
+                  </label>
+                  <input
+                    id="end-date"
+                    type="date"
+                    value={taskEndDate}
+                    onChange={(e) => setTaskEndDate(e.target.value)}
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-300"
+                  />
+                </div>
+              </div>
               <button
                 type="submit"
                 className="rounded-xl bg-sky-500 px-4 py-3 font-semibold text-white hover:bg-sky-400 transition-colors"
