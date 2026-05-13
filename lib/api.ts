@@ -21,6 +21,12 @@ export interface Task {
   category: string;
   month: string;
   notes: string;
+  projectId?: string;
+}
+
+export interface ReorderTaskPayload {
+  id: string;
+  status?: Task["status"];
 }
 
 export interface MaintenanceMode {
@@ -132,6 +138,15 @@ export async function deleteTask(id: string): Promise<void> {
     method: "DELETE",
   });
   await readJson<Record<string, string>>(res);
+}
+
+export async function reorderTasks(payload: ReorderTaskPayload[]): Promise<Task[]> {
+  const res = await fetch("/api/tasks/reorder", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tasks: payload }),
+  });
+  return readJson<Task[]>(res);
 }
 
 // ── Context.md ────────────────────────────────────────────────────────────────

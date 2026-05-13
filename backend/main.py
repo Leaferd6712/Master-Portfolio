@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -92,6 +93,7 @@ class TaskBase(BaseModel):
     category: str
     month: str
     notes: str = ""
+    projectId: str | None = None
 
 
 class TaskCreate(TaskBase):
@@ -105,6 +107,16 @@ class TaskUpdate(BaseModel):
     category: str | None = None
     month: str | None = None
     notes: str | None = None
+    projectId: str | None = None
+
+
+class ReorderTaskItem(BaseModel):
+    id: str
+    status: str | None = None
+
+
+class ReorderTasksBody(BaseModel):
+    tasks: list[ReorderTaskItem]
 
 
 class ContextBody(BaseModel):
@@ -273,6 +285,90 @@ def _next_task_id(tasks: list[dict[str, Any]]) -> str:
     return str((max(numeric_ids) + 1) if numeric_ids else 1)
 
 
+def _project_progress(project: dict[str, Any]) -> int:
+    raw = project.get("progress", 0)
+    try:
+        return int(raw)
+    except Exception:
+        return 0
+
+
+def _sync_tasks_from_projects(tasks: list[dict[str, Any]], projects: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
+    changed = False
+    project_by_id = {str(project.get("id", "")).strip(): project for project in projects}
+    existing_project_ids = {
+        str(task.get("projectId", "")).strip()
+        for task in tasks
+        if str(task.get("projectId", "")).strip()
+    }
+
+    for project in projects:
+        project_id = str(project.get("id", "")).strip()
+        if not project_id:
+            continue
+
+        if _project_progress(project) >= 100:
+            continue
+
+        if project_id in existing_project_ids:
+            continue
+
+        item = {
+            "id": _next_task_id(tasks),
+            "title": str(project.get("title", "Untitled project")),
+            "status": "in progress" if _project_progress(project) > 0 else "planned",
+            "priority": "high" if _project_progress(project) >= 75 else "medium",
+            "category": str(project.get("category", "Project")) or "Project",
+            "month": datetime.now().strftime("%B"),
+            "notes": "Auto-created from project progress.",
+            "projectId": project_id,
+        }
+        tasks.append(item)
+        existing_project_ids.add(project_id)
+        changed = True
+
+    for task in tasks:
+        linked_project_id = str(task.get("projectId", "")).strip()
+        if not linked_project_id:
+            continue
+
+        project = project_by_id.get(linked_project_id)
+        if not project:
+            continue
+
+        if _project_progress(project) >= 100 and str(task.get("status", "")).strip() != "done":
+            task["status"] = "done"
+            changed = True
+
+    return tasks, changed
+
+
+def _sync_project_from_task(task: dict[str, Any], projects: list[dict[str, Any]]) -> bool:
+    linked_project_id = str(task.get("projectId", "")).strip()
+    if not linked_project_id:
+        return False
+
+    for idx, project in enumerate(projects):
+        if str(project.get("id", "")).strip() != linked_project_id:
+            continue
+
+        if str(task.get("status", "")).strip() != "done":
+            return False
+
+        progress = _project_progress(project)
+        status = str(project.get("status", "")).strip()
+        if progress >= 100 and status == "finished":
+            return False
+
+        updated = dict(project)
+        updated["progress"] = 100
+        updated["status"] = "finished"
+        projects[idx] = updated
+        return True
+
+    return False
+
+
 def _read_maintenance() -> dict[str, Any]:
     default_state = {
         "enabled": False,
@@ -393,7 +489,13 @@ def remove_project(project_id: str) -> dict[str, str]:
 
 @app.get("/tasks", dependencies=[Depends(_require_token)])
 def get_tasks() -> list[dict[str, Any]]:
-    return _read_json(TASKS_PATH)
+    tasks = _read_json(TASKS_PATH)
+    projects = _read_json(PROJECTS_PATH)
+    tasks, changed = _sync_tasks_from_projects(tasks, projects)
+    if changed:
+        _write_json(TASKS_PATH, tasks)
+        _push_tasks_to_github()  # Auto-sync to GitHub
+    return tasks
 
 
 @app.post("/tasks", dependencies=[Depends(_require_token)])
@@ -404,7 +506,59 @@ def add_task(body: TaskCreate) -> dict[str, Any]:
     tasks.append(item)
     _write_json(TASKS_PATH, tasks)
     _push_tasks_to_github()  # Auto-sync to GitHub
+
+    projects = _read_json(PROJECTS_PATH)
+    if _sync_project_from_task(item, projects):
+        _write_json(PROJECTS_PATH, projects)
+        _push_projects_to_github()  # Auto-sync to GitHub
+
     return item
+
+
+@app.put("/tasks/reorder", dependencies=[Depends(_require_token)])
+def reorder_tasks(body: ReorderTasksBody) -> list[dict[str, Any]]:
+    tasks = _read_json(TASKS_PATH)
+    tasks_by_id = {str(task.get("id", "")).strip(): task for task in tasks}
+
+    ordered: list[dict[str, Any]] = []
+    used_ids: set[str] = set()
+
+    for row in body.tasks:
+        task_id = str(row.id).strip()
+        if not task_id or task_id in used_ids:
+            continue
+
+        base = tasks_by_id.get(task_id)
+        if not base:
+            continue
+
+        updated = dict(base)
+        if row.status is not None:
+            updated["status"] = row.status
+
+        ordered.append(updated)
+        used_ids.add(task_id)
+
+    for task in tasks:
+        task_id = str(task.get("id", "")).strip()
+        if task_id in used_ids:
+            continue
+        ordered.append(task)
+
+    projects = _read_json(PROJECTS_PATH)
+    project_changed = False
+    for task in ordered:
+        if _sync_project_from_task(task, projects):
+            project_changed = True
+
+    _write_json(TASKS_PATH, ordered)
+    _push_tasks_to_github()  # Auto-sync to GitHub
+
+    if project_changed:
+        _write_json(PROJECTS_PATH, projects)
+        _push_projects_to_github()  # Auto-sync to GitHub
+
+    return ordered
 
 
 @app.put("/tasks/{task_id}", dependencies=[Depends(_require_token)])
@@ -416,8 +570,17 @@ def update_task(task_id: str, body: TaskUpdate) -> dict[str, Any]:
         if str(item.get("id")) == task_id:
             updated = {**item, **patch}
             tasks[index] = updated
+
+            projects = _read_json(PROJECTS_PATH)
+            project_changed = _sync_project_from_task(updated, projects)
+
             _write_json(TASKS_PATH, tasks)
             _push_tasks_to_github()  # Auto-sync to GitHub
+
+            if project_changed:
+                _write_json(PROJECTS_PATH, projects)
+                _push_projects_to_github()  # Auto-sync to GitHub
+
             return updated
 
     raise HTTPException(status_code=404, detail="Task not found")
