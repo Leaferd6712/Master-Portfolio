@@ -6,6 +6,7 @@ import DownloadDataButton from "@/components/dashboard/DownloadDataButton";
 const dashboardLinks = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/tasks", label: "Tasks" },
+  { href: "/dashboard/all-tasks", label: "All Tasks" },
   { href: "/dashboard/roadmap", label: "Roadmap" },
   { href: "/dashboard/projects", label: "Projects" },
   { href: "/dashboard/context", label: "Context" },
