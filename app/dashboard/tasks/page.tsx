@@ -107,19 +107,42 @@ function SortableTaskCard({
   task,
   onMoveTask,
   onDeleteTask,
+  onUpdateDates,
 }: {
   task: Task;
   onMoveTask: (taskId: string, status: Task["status"]) => void;
   onDeleteTask: (taskId: string) => void;
+  onUpdateDates: (taskId: string, startDate: string, endDate: string) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id });
+
+  const [editingDates, setEditingDates] = useState(false);
+  const [draftStart, setDraftStart] = useState(task.startDate);
+  const [draftEnd, setDraftEnd] = useState(task.endDate);
+  const [savingDates, setSavingDates] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0];
+  const isOverdue = task.endDate && task.endDate < today && task.status !== "done";
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.6 : 1,
   };
+
+  async function handleSaveDates() {
+    setSavingDates(true);
+    await onUpdateDates(task.id, draftStart, draftEnd);
+    setSavingDates(false);
+    setEditingDates(false);
+  }
+
+  function handleCancelDates() {
+    setDraftStart(task.startDate);
+    setDraftEnd(task.endDate);
+    setEditingDates(false);
+  }
 
   return (
     <div
@@ -144,9 +167,66 @@ function SortableTaskCard({
         {task.category} · {task.priority} priority · {task.month}
       </p>
       <p className="mt-1 text-[11px] text-sky-300">Project: {task.projectId}</p>
-      <p className="mt-1 text-[11px] text-zinc-400">
-        {task.startDate} - {task.endDate}
-      </p>
+
+      {/* Dates row */}
+      {editingDates ? (
+        <div className="mt-2 space-y-2">
+          <div className="flex items-center gap-2">
+            <label className="text-[11px] text-zinc-400 w-16 shrink-0">Start</label>
+            <input
+              type="date"
+              value={draftStart}
+              onChange={(e) => setDraftStart(e.target.value)}
+              className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[11px] text-zinc-400 w-16 shrink-0">Due</label>
+            <input
+              type="date"
+              value={draftEnd}
+              onChange={(e) => setDraftEnd(e.target.value)}
+              className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSaveDates}
+              disabled={savingDates}
+              className="rounded-md bg-sky-600 px-3 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50 transition-colors"
+            >
+              {savingDates ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelDates}
+              className="rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-1 flex items-center gap-2">
+          {isOverdue ? (
+            <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+              OVERDUE
+            </span>
+          ) : null}
+          <span className="text-[11px] text-zinc-400">
+            {task.startDate} – {task.endDate}
+          </span>
+          <button
+            type="button"
+            onClick={() => setEditingDates(true)}
+            className="text-[11px] text-zinc-500 hover:text-sky-400 transition-colors underline underline-offset-2"
+          >
+            Edit dates
+          </button>
+        </div>
+      )}
+
       <div className="mt-3 flex items-center justify-between gap-3">
         <TaskStatusBadge status={task.status} />
         <div className="flex items-center gap-2">
@@ -179,11 +259,13 @@ function TaskColumn({
   items,
   onMoveTask,
   onDeleteTask,
+  onUpdateDates,
 }: {
   status: Task["status"];
   items: Task[];
   onMoveTask: (taskId: string, status: Task["status"]) => void;
   onDeleteTask: (taskId: string) => void;
+  onUpdateDates: (taskId: string, startDate: string, endDate: string) => Promise<void>;
 }) {
   const droppableId = `column:${status}`;
   const { setNodeRef, isOver } = useDroppable({ id: droppableId });
@@ -209,6 +291,7 @@ function TaskColumn({
               task={task}
               onMoveTask={onMoveTask}
               onDeleteTask={onDeleteTask}
+              onUpdateDates={onUpdateDates}
             />
           ))}
           {items.length === 0 ? (
@@ -316,6 +399,16 @@ export default function DashboardTasksPage() {
       setEndDate("");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to add task";
+      setError(msg);
+    }
+  }
+
+  async function onUpdateDates(taskId: string, startDate: string, endDate: string) {
+    try {
+      const updated = await updateTask(taskId, { startDate, endDate });
+      setTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to update dates";
       setError(msg);
     }
   }
@@ -469,6 +562,7 @@ export default function DashboardTasksPage() {
               items={tasksByColumn[status]}
               onMoveTask={onMoveTask}
               onDeleteTask={onDeleteTask}
+              onUpdateDates={onUpdateDates}
             />
           ))}
         </div>
