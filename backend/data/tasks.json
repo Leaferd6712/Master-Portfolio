@@ -1,5 +1,17 @@
 [
   {
+    "id": "12",
+    "title": "Student Hub",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "Tools",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "student-hub",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
     "id": "1",
     "title": "Blob Game",
     "status": "in progress",
@@ -128,18 +140,6 @@
     "month": "May",
     "notes": "Auto-created from project progress.",
     "projectId": "kartblitz",
-    "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
-  },
-  {
-    "id": "12",
-    "title": "Student Hub",
-    "status": "in progress",
-    "priority": "medium",
-    "category": "Tools",
-    "month": "May",
-    "notes": "Auto-created from project progress.",
-    "projectId": "student-hub",
     "startDate": "2026-05-15",
     "endDate": "2026-05-15"
   }
