@@ -1,5 +1,17 @@
 [
   {
+    "id": "9",
+    "title": "YOLOv5 Auto Model Loader",
+    "status": "planned",
+    "priority": "medium",
+    "category": "ML / Vision",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "yolov5-auto-model-loader-2",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
     "id": "12",
     "title": "Student Hub",
     "status": "in progress",
@@ -106,18 +118,6 @@
     "projectId": "yolov5-auto-model-loader",
     "startDate": "2026-05-15",
     "endDate": "2026-05-31"
-  },
-  {
-    "id": "9",
-    "title": "YOLOv5 Auto Model Loader",
-    "status": "planned",
-    "priority": "medium",
-    "category": "ML / Vision",
-    "month": "May",
-    "notes": "Auto-created from project progress.",
-    "projectId": "yolov5-auto-model-loader-2",
-    "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
   },
   {
     "id": "10",
