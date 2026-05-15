@@ -21,9 +21,9 @@ export interface Task {
   category: string;
   month: string;
   notes: string;
-  projectId?: string;
-  startDate?: string;
-  endDate?: string;
+  projectId: string;
+  startDate: string;
+  endDate: string;
 }
 
 export interface ReorderTaskPayload {

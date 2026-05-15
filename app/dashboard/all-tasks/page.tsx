@@ -4,7 +4,6 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 import TaskStatusBadge from "@/components/dashboard/TaskStatusBadge";
 import { useEffect, useState } from "react";
 import {
-  deleteTask,
   getTasks,
   reorderTasks,
   Task,
@@ -26,8 +25,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const statuses: Array<Task["status"]> = ["idea", "planned", "in progress", "done"];
-
 function reorderAllTasks(prev: Task[], activeId: string, overId: string): Task[] {
   if (activeId === overId) return prev;
 
@@ -43,15 +40,11 @@ function SortableAllTaskCard({
   notesValue,
   onNotesChange,
   onNotesBlur,
-  onStatusChange,
-  onDelete,
 }: {
   task: Task;
   notesValue: string;
   onNotesChange: (taskId: string, value: string) => void;
   onNotesBlur: (taskId: string) => void;
-  onStatusChange: (taskId: string, status: Task["status"]) => void;
-  onDelete: (taskId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id });
@@ -97,26 +90,7 @@ function SortableAllTaskCard({
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <TaskStatusBadge status={task.status} />
-        <div className="flex items-center gap-2">
-          <select
-            value={task.status}
-            onChange={(e) => onStatusChange(task.id, e.target.value as Task["status"])}
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-300"
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => onDelete(task.id)}
-            className="text-xs text-red-400 hover:text-red-300 transition-colors"
-          >
-            Delete
-          </button>
-        </div>
+        <span className="text-xs text-zinc-500">View, annotate, reorder</span>
       </div>
 
       <div className="mt-4">
@@ -215,35 +189,10 @@ export default function DashboardAllTasksPage() {
     }
   }
 
-  async function onStatusChange(taskId: string, status: Task["status"]) {
-    try {
-      const updated = await updateTask(taskId, { status });
-      setTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to update task status";
-      setError(msg);
-    }
-  }
-
-  async function onDelete(taskId: string) {
-    try {
-      await deleteTask(taskId);
-      setTasks((prev) => prev.filter((task) => task.id !== taskId));
-      setNotesDrafts((prev) => {
-        const next = { ...prev };
-        delete next[taskId];
-        return next;
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to delete task";
-      setError(msg);
-    }
-  }
-
   return (
     <DashboardShell
       title="All Tasks"
-      description="All tasks are synced here automatically, including project-linked tasks. Drag cards to set your global order and add notes under each task."
+      description="Use this view to review every task, add notes, and drag cards into your preferred order."
     >
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
@@ -271,8 +220,6 @@ export default function DashboardAllTasksPage() {
                   notesValue={notesDrafts[task.id] ?? ""}
                   onNotesChange={onNotesChange}
                   onNotesBlur={onNotesBlur}
-                  onStatusChange={onStatusChange}
-                  onDelete={onDelete}
                 />
               ))}
               {!loading && tasks.length === 0 ? (

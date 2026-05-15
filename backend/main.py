@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 import re
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -93,7 +93,9 @@ class TaskBase(BaseModel):
     category: str
     month: str
     notes: str = ""
-    projectId: str | None = None
+    projectId: str
+    startDate: str
+    endDate: str | None = None
 
 
 class TaskCreate(TaskBase):
@@ -108,6 +110,8 @@ class TaskUpdate(BaseModel):
     month: str | None = None
     notes: str | None = None
     projectId: str | None = None
+    startDate: str | None = None
+    endDate: str | None = None
 
 
 class ReorderTaskItem(BaseModel):
@@ -285,6 +289,53 @@ def _next_task_id(tasks: list[dict[str, Any]]) -> str:
     return str((max(numeric_ids) + 1) if numeric_ids else 1)
 
 
+def _parse_iso_date(value: str | None) -> date | None:
+    if value is None:
+        return None
+    raw = value.strip()
+    if not raw:
+        return None
+    try:
+        return datetime.strptime(raw, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Dates must use YYYY-MM-DD format")
+
+
+def _require_existing_project(project_id: str, projects: list[dict[str, Any]]) -> None:
+    normalized = project_id.strip()
+    if not normalized:
+        raise HTTPException(status_code=400, detail="projectId is required")
+
+    for project in projects:
+        if str(project.get("id", "")).strip() == normalized:
+            return
+
+    raise HTTPException(status_code=400, detail="Linked project was not found")
+
+
+def _validate_task_payload(item: dict[str, Any], projects: list[dict[str, Any]]) -> dict[str, Any]:
+    project_id = str(item.get("projectId", "")).strip()
+    _require_existing_project(project_id, projects)
+
+    start_raw = str(item.get("startDate", "")).strip()
+    if not start_raw:
+        raise HTTPException(status_code=400, detail="startDate is required")
+
+    start = _parse_iso_date(start_raw)
+    end_raw = str(item.get("endDate", "")).strip()
+    end = _parse_iso_date(end_raw) if end_raw else start
+    if start is None or end is None:
+        raise HTTPException(status_code=400, detail="A valid scheduled date is required")
+
+    if end < start:
+        raise HTTPException(status_code=400, detail="endDate cannot be before startDate")
+
+    item["projectId"] = project_id
+    item["startDate"] = start.isoformat()
+    item["endDate"] = end.isoformat()
+    return item
+
+
 def _project_progress(project: dict[str, Any]) -> int:
     raw = project.get("progress", 0)
     try:
@@ -322,6 +373,8 @@ def _sync_tasks_from_projects(tasks: list[dict[str, Any]], projects: list[dict[s
             "month": datetime.now().strftime("%B"),
             "notes": "Auto-created from project progress.",
             "projectId": project_id,
+            "startDate": date.today().isoformat(),
+            "endDate": date.today().isoformat(),
         }
         tasks.append(item)
         existing_project_ids.add(project_id)
@@ -338,6 +391,16 @@ def _sync_tasks_from_projects(tasks: list[dict[str, Any]], projects: list[dict[s
 
         if _project_progress(project) >= 100 and str(task.get("status", "")).strip() != "done":
             task["status"] = "done"
+            changed = True
+
+        start_raw = str(task.get("startDate", "")).strip()
+        end_raw = str(task.get("endDate", "")).strip()
+        if not start_raw:
+            task["startDate"] = date.today().isoformat()
+            start_raw = task["startDate"]
+            changed = True
+        if not end_raw:
+            task["endDate"] = start_raw
             changed = True
 
     return tasks, changed
@@ -501,13 +564,13 @@ def get_tasks() -> list[dict[str, Any]]:
 @app.post("/tasks", dependencies=[Depends(_require_token)])
 def add_task(body: TaskCreate) -> dict[str, Any]:
     tasks = _read_json(TASKS_PATH)
-    item = body.model_dump()
+    projects = _read_json(PROJECTS_PATH)
+    item = _validate_task_payload(body.model_dump(), projects)
     item["id"] = _next_task_id(tasks)
     tasks.append(item)
     _write_json(TASKS_PATH, tasks)
     _push_tasks_to_github()  # Auto-sync to GitHub
 
-    projects = _read_json(PROJECTS_PATH)
     if _sync_project_from_task(item, projects):
         _write_json(PROJECTS_PATH, projects)
         _push_projects_to_github()  # Auto-sync to GitHub
@@ -565,13 +628,14 @@ def reorder_tasks(body: ReorderTasksBody) -> list[dict[str, Any]]:
 def update_task(task_id: str, body: TaskUpdate) -> dict[str, Any]:
     tasks = _read_json(TASKS_PATH)
     patch = body.model_dump(exclude_none=True)
+    projects = _read_json(PROJECTS_PATH)
 
     for index, item in enumerate(tasks):
         if str(item.get("id")) == task_id:
             updated = {**item, **patch}
+            updated = _validate_task_payload(updated, projects)
             tasks[index] = updated
 
-            projects = _read_json(PROJECTS_PATH)
             project_changed = _sync_project_from_task(updated, projects)
 
             _write_json(TASKS_PATH, tasks)

@@ -2,11 +2,14 @@
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import TaskStatusBadge from "@/components/dashboard/TaskStatusBadge";
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   addTask,
   deleteTask,
+  getProjects,
   getTasks,
+  Project,
   reorderTasks,
   Task,
   updateTask,
@@ -140,9 +143,10 @@ function SortableTaskCard({
       <p className="mt-2 text-xs text-zinc-500">
         {task.category} · {task.priority} priority · {task.month}
       </p>
-      {task.projectId ? (
-        <p className="mt-1 text-[11px] text-sky-300">Linked project task</p>
-      ) : null}
+      <p className="mt-1 text-[11px] text-sky-300">Project: {task.projectId}</p>
+      <p className="mt-1 text-[11px] text-zinc-400">
+        {task.startDate} - {task.endDate}
+      </p>
       <div className="mt-3 flex items-center justify-between gap-3">
         <TaskStatusBadge status={task.status} />
         <div className="flex items-center gap-2">
@@ -218,7 +222,14 @@ function TaskColumn({
 
 export default function DashboardTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [title, setTitle] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [priority, setPriority] = useState<Task["priority"]>("medium");
+  const [category, setCategory] = useState("General");
+  const [month, setMonth] = useState(new Date().toLocaleString("en-US", { month: "long" }));
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -253,8 +264,13 @@ export default function DashboardTasksPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getTasks();
-        setTasks(data);
+        const [taskData, projectData] = await Promise.all([getTasks(), getProjects()]);
+        setTasks(taskData);
+        setProjects(projectData);
+        if (projectData.length > 0) {
+          setProjectId(projectData[0].id);
+          setCategory(projectData[0].category || "General");
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load tasks";
         setError(msg);
@@ -268,19 +284,36 @@ export default function DashboardTasksPage() {
 
   async function onCreateTask(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setError("Task title is required");
+      return;
+    }
+    if (!projectId) {
+      setError("Create a project first before adding tasks");
+      return;
+    }
+    if (!startDate) {
+      setError("A scheduled date is required");
+      return;
+    }
 
     try {
+      setError("");
       const created = await addTask({
         title: title.trim(),
-        status: "idea",
-        priority: "medium",
-        category: "Backend",
-        month: "May",
+        status: "planned",
+        priority,
+        category: category.trim() || "General",
+        month: month.trim() || "Unscheduled",
         notes: "",
+        projectId,
+        startDate,
+        endDate: endDate || startDate,
       });
       setTasks((prev) => [...prev, created]);
       setTitle("");
+      setStartDate("");
+      setEndDate("");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to add task";
       setError(msg);
@@ -330,7 +363,7 @@ export default function DashboardTasksPage() {
   return (
     <DashboardShell
       title="Task Manager"
-      description="Projects under 100% are auto-added to tasks. Drag task cards to reorder your priority."
+      description="Create and edit tasks here. Every task must be linked to a project and scheduled."
     >
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
@@ -338,22 +371,91 @@ export default function DashboardTasksPage() {
         </div>
       ) : null}
 
+      {projects.length === 0 ? (
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-200">
+          <p className="font-medium">Create a project before adding tasks.</p>
+          <p className="mt-1 text-amber-100/90">Tasks now require an existing project link.</p>
+          <Link
+            href="/dashboard/projects"
+            className="mt-3 inline-flex rounded-lg border border-amber-300/30 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-300/10"
+          >
+            Go to Projects
+          </Link>
+        </div>
+      ) : null}
+
       <form
         onSubmit={onCreateTask}
-        className="mb-6 flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4 md:flex-row"
+        className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-4"
       >
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add a new task"
-          className="flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-white placeholder:text-zinc-500"
-        />
-        <button
-          type="submit"
-          className="rounded-xl bg-sky-500 px-4 py-2.5 font-semibold text-white hover:bg-sky-400 transition-colors"
-        >
-          Add task
-        </button>
+        <h2 className="mb-3 text-lg font-semibold text-white">New Task</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Task title"
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-white placeholder:text-zinc-500"
+          />
+          <select
+            value={projectId}
+            onChange={(e) => {
+              const nextId = e.target.value;
+              setProjectId(nextId);
+              const selectedProject = projects.find((project) => project.id === nextId);
+              if (selectedProject?.category) setCategory(selectedProject.category);
+            }}
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+          >
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </select>
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as Task["priority"])}
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+          >
+            <option value="high">High priority</option>
+            <option value="medium">Medium priority</option>
+            <option value="low">Low priority</option>
+          </select>
+          <input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Category"
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+          />
+          <input
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            placeholder="Month"
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+          />
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+          />
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-zinc-500">New ideas are added to Planned by default.</p>
+          <button
+            type="submit"
+            disabled={projects.length === 0}
+            className="rounded-xl bg-sky-500 px-4 py-2.5 font-semibold text-white hover:bg-sky-400 transition-colors disabled:opacity-50"
+          >
+            Add to Planned
+          </button>
+        </div>
       </form>
 
       {loading ? <p className="text-zinc-500">Loading tasks...</p> : null}

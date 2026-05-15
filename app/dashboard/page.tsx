@@ -2,22 +2,19 @@
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import TaskStatusBadge from "@/components/dashboard/TaskStatusBadge";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import type { Project } from "@/components/ProjectCard";
-import { addTask, getProjects, getTasks, Task } from "@/lib/api";
+import { getProjects, getTasks, Task } from "@/lib/api";
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskCategory, setTaskCategory] = useState("Backend");
-  const [taskPriority, setTaskPriority] = useState<Task["priority"]>("medium");
-  const [taskMonth, setTaskMonth] = useState("May");
-  const [taskStartDate, setTaskStartDate] = useState("");
-  const [taskEndDate, setTaskEndDate] = useState("");
+  const [currentFocus, setCurrentFocus] = useState(
+    "Keep active work limited, finish in-progress items, and use the task board to move work from idea to done every week."
+  );
 
   useEffect(() => {
     async function load() {
@@ -39,51 +36,26 @@ export default function DashboardPage() {
     void load();
   }, []);
 
-  async function handleAddTask(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!taskTitle.trim()) return;
-
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const startDate = taskStartDate || todayIso;
-    const endDate = taskEndDate || todayIso;
-
-    try {
-      const created = await addTask({
-        title: taskTitle.trim(),
-        status: "planned",
-        priority: taskPriority,
-        category: taskCategory,
-        month: taskMonth,
-        notes: "",
-        startDate,
-        endDate,
-      });
-      setTasks((prev) => [created, ...prev]);
-      setTaskTitle("");
-      setTaskStartDate("");
-      setTaskEndDate("");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to add task";
-      setError(msg);
+  useEffect(() => {
+    const savedFocus = window.localStorage.getItem("dashboard.currentFocus");
+    if (savedFocus && savedFocus.trim()) {
+      setCurrentFocus(savedFocus);
     }
-  }
+  }, []);
 
-  const today = new Date();
-  function isInDateRange(task: Task): boolean {
-    if (!task.startDate && !task.endDate) return true;
-    try {
-      const start = task.startDate ? new Date(task.startDate) : null;
-      const end = task.endDate ? new Date(task.endDate) : null;
-      if (start && end) return start <= today && today <= end;
-      if (start && !end) return start <= today;
-      if (!start && end) return today <= end;
-    } catch {
-      return true;
-    }
-    return true;
-  }
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const openTasks = useMemo(() => tasks.filter((task) => task.status !== "done"), [tasks]);
+  const todayFocusTasks = useMemo(
+    () =>
+      tasks.filter((task) => {
+        if (task.status === "done") return false;
+        const start = task.startDate;
+        const end = task.endDate || task.startDate;
+        return start <= todayIso && todayIso <= end;
+      }),
+    [tasks, todayIso]
+  );
 
-  const activeTasks = tasks.filter((task) => task.status !== "done" && isInDateRange(task));
   const activeProjects = useMemo(
     () => projects.filter((project) => project.status !== "finished"),
     [projects]
@@ -103,7 +75,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
           <p className="text-sm text-zinc-400">Open tasks</p>
-          <p className="mt-2 text-4xl font-bold text-white">{activeTasks.length}</p>
+          <p className="mt-2 text-4xl font-bold text-white">{openTasks.length}</p>
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
           <p className="text-sm text-zinc-400">Projects tracked</p>
@@ -125,7 +97,7 @@ export default function DashboardPage() {
             <p className="text-zinc-500">Loading tasks...</p>
           ) : (
             <div className="space-y-4">
-              {activeTasks.slice(0, 4).map((task) => (
+              {todayFocusTasks.slice(0, 4).map((task) => (
                 <div key={task.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -133,18 +105,16 @@ export default function DashboardPage() {
                       <p className="mt-1 text-sm text-zinc-500">
                         {task.category} · {task.priority} priority · {task.month}
                       </p>
-                      {task.startDate || task.endDate ? (
-                        <p className="mt-1 text-xs text-zinc-400">
-                          {task.startDate ?? ""} — {task.endDate ?? ""}
-                        </p>
-                      ) : null}
+                      <p className="mt-1 text-xs text-zinc-400">
+                        {task.startDate} — {task.endDate}
+                      </p>
                     </div>
                     <TaskStatusBadge status={task.status} />
                   </div>
                 </div>
               ))}
-              {activeTasks.length === 0 ? (
-                <p className="text-zinc-500">No active tasks. Add one on the right.</p>
+              {todayFocusTasks.length === 0 ? (
+                <p className="text-zinc-500">No tasks are scheduled for today.</p>
               ) : null}
             </div>
           )}
@@ -152,93 +122,29 @@ export default function DashboardPage() {
 
         <div className="space-y-6">
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-            <h2 className="text-xl font-semibold text-white">Quick add task</h2>
-            <form className="mt-4 grid gap-3" onSubmit={handleAddTask}>
-              <input
-                type="text"
-                value={taskTitle}
-                onChange={(e) => setTaskTitle(e.target.value)}
-                placeholder="New task title"
-                className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={taskCategory}
-                  onChange={(e) => setTaskCategory(e.target.value)}
-                  className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-300"
-                >
-                  <option>Python</option>
-                  <option>ML</option>
-                  <option>Vision</option>
-                  <option>CAD</option>
-                  <option>Games</option>
-                  <option>Backend</option>
-                </select>
-                <select
-                  value={taskPriority}
-                  onChange={(e) => setTaskPriority(e.target.value as Task["priority"])}
-                  className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-300"
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <select
-                value={taskMonth}
-                onChange={(e) => setTaskMonth(e.target.value)}
-                className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-300"
-              >
-                <option>May</option>
-                <option>June</option>
-                <option>July</option>
-                <option>August</option>
-                <option>September</option>
-                <option>October</option>
-                <option>November</option>
-                <option>December</option>
-              </select>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="start-date" className="mb-1 block text-xs text-zinc-400">
-                    Start Date
-                  </label>
-                  <input
-                    id="start-date"
-                    type="date"
-                    value={taskStartDate}
-                    onChange={(e) => setTaskStartDate(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-300"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="end-date" className="mb-1 block text-xs text-zinc-400">
-                    End Date
-                  </label>
-                  <input
-                    id="end-date"
-                    type="date"
-                    value={taskEndDate}
-                    onChange={(e) => setTaskEndDate(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-300"
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="rounded-xl bg-sky-500 px-4 py-3 font-semibold text-white hover:bg-sky-400 transition-colors"
-              >
-                Add task
-              </button>
-            </form>
+            <h2 className="text-xl font-semibold text-white">Task Creation</h2>
+            <p className="mt-3 text-zinc-400 leading-relaxed">
+              Quick Add has been removed. Create all tasks in the Tasks section so each one is linked
+              to a project and scheduled.
+            </p>
+            <Link
+              href="/dashboard/tasks"
+              className="mt-4 inline-flex rounded-xl bg-sky-500 px-4 py-2.5 font-semibold text-white hover:bg-sky-400 transition-colors"
+            >
+              Open Tasks Section
+            </Link>
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
             <h2 className="text-xl font-semibold text-white">Current focus</h2>
-            <p className="mt-4 text-zinc-400 leading-relaxed">
-              Keep active work limited, finish in-progress items, and use the
-              task board to move work from idea to done every week.
-            </p>
+            <textarea
+              value={currentFocus}
+              onChange={(e) => {
+                setCurrentFocus(e.target.value);
+                window.localStorage.setItem("dashboard.currentFocus", e.target.value);
+              }}
+              className="mt-4 min-h-36 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200"
+            />
           </div>
         </div>
       </div>
