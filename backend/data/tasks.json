@@ -1,1 +1,146 @@
-[]
+[
+  {
+    "id": "1",
+    "title": "Blob Game",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "Games",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "blob-game",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "2",
+    "title": "Offline Music Player",
+    "status": "in progress",
+    "priority": "high",
+    "category": "Tools",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "offline-music-player",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "3",
+    "title": "QuizBlast",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "Tools",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "quizblast",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "4",
+    "title": "Mini Market Simulation",
+    "status": "in progress",
+    "priority": "high",
+    "category": "Games",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "mini-market-simulation",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "5",
+    "title": "Pothole Instance Segmentation",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "ML / Vision",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "pothole-instance-segmentation",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "6",
+    "title": "Stellar Siege",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "Games",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "stellar-siege",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "7",
+    "title": "Memories Game",
+    "status": "planned",
+    "priority": "medium",
+    "category": "Games",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "memories-game",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "8",
+    "title": "YOLOv5 Auto Model Loader",
+    "status": "planned",
+    "priority": "medium",
+    "category": "ML / Vision",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "yolov5-auto-model-loader",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "9",
+    "title": "YOLOv5 Auto Model Loader",
+    "status": "planned",
+    "priority": "medium",
+    "category": "ML / Vision",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "yolov5-auto-model-loader-2",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "10",
+    "title": "Australian Bill Counter",
+    "status": "planned",
+    "priority": "medium",
+    "category": "ML / Vision",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "australian-bill-counter",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "11",
+    "title": "KartBlitz",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "Games",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "kartblitz",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  },
+  {
+    "id": "12",
+    "title": "Student Hub",
+    "status": "in progress",
+    "priority": "medium",
+    "category": "Tools",
+    "month": "May",
+    "notes": "Auto-created from project progress.",
+    "projectId": "student-hub",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15"
+  }
+]
