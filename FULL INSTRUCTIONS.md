@@ -87,15 +87,22 @@ cd ..
 
 This installs FastAPI, Uvicorn, and other Python packages.
 
+If this laptop shows `Access is denied` when running `pip` inside `backend/venv`, skip the venv and install with user Python:
+```bash
+cd backend
+python -m pip install --user -r requirements.txt
+cd ..
+```
+
 ### Step 4: Start Backend (Terminal 1)
 ```bash
 cd backend
-uvicorn main:app --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
 You should see:
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Uvicorn running on http://127.0.0.1:8000
 ```
 
 Leave this running.
@@ -469,6 +476,21 @@ Replace with your actual tasks:
 ---
 
 ## Troubleshooting
+
+### pip fails in venv with Access is denied
+
+- Symptom: `pip` works outside `backend/venv`, but fails when venv is activated.
+- Temporary fix on this laptop: do not use `backend/venv` until permissions are repaired.
+- Use user Python and run:
+
+```bash
+cd backend
+deactivate
+python -m pip install --user fastapi uvicorn pydantic
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+If `uvicorn` command is not recognized, continue using `python -m uvicorn ...`.
 
 ### "Cannot connect to backend" when testing dashboard
 **Solution**: 

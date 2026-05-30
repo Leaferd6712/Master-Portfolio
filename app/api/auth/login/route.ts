@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { safeBackendJson, toBackendUrl } from "@/app/api/_lib/backend";
+import { safeBackendJson, toBackendUrl, ngrokHeader } from "@/app/api/_lib/backend";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   try {
     backendRes = await fetch(toBackendUrl("/auth/login"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...ngrokHeader() },
       body: JSON.stringify({ password: body.password }),
       cache: "no-store",
     });

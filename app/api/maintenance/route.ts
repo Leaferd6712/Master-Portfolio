@@ -3,10 +3,12 @@ import {
   getAuthHeaderFromCookie,
   safeBackendJson,
   toBackendUrl,
+  ngrokHeader,
 } from "@/app/api/_lib/backend";
 
 export async function GET() {
   const backendRes = await fetch(toBackendUrl("/maintenance"), {
+    headers: ngrokHeader(),
     cache: "no-store",
   });
 
