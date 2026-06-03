@@ -1,0 +1,9 @@
+Terminal 1 
+cd "C:\Users\663208\Downloads\Master-Portfolio\backend"
+
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
+
+Terminal 2
+cd "C:\Users\663208\Downloads\Master-Portfolio"
+
+ngrok http 8000 
