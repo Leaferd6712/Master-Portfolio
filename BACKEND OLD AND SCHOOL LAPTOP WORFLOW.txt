@@ -1,0 +1,30 @@
+Setup Once
+School laptop
+Used for coding.
+Connected to your GitHub repository.
+Old laptop
+Used for running the app/backend/LM Studio.
+Has the same repository cloned.
+Daily Workflow
+1. Write code on school laptop
+git add .
+git commit -m "Added login page"
+git push
+
+Changes are now on GitHub.
+
+2. Go to old laptop
+
+Pull the latest code:
+
+git pull
+
+Start or restart the app:
+
+python app.py
+
+or
+
+npm start
+
+depending on your project.
