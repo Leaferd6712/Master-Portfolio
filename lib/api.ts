@@ -168,6 +168,23 @@ export async function saveContext(content: string): Promise<void> {
   await readJson<Record<string, string>>(res);
 }
 
+// ── Roadmap Notes ────────────────────────────────────────────────────────────
+
+export async function getRoadmap(): Promise<string> {
+  const res = await fetch("/api/roadmap", { cache: "no-store" });
+  const data = await readJson<{ content: string }>(res);
+  return data.content as string;
+}
+
+export async function saveRoadmap(content: string): Promise<void> {
+  const res = await fetch("/api/roadmap", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  await readJson<Record<string, string>>(res);
+}
+
 // ── AI Chat (Phase 5) ─────────────────────────────────────────────────────────
 
 export async function sendChatMessage(

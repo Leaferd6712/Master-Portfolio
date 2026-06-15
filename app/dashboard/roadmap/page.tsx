@@ -1,31 +1,21 @@
 "use client";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
-import TaskStatusBadge from "@/components/dashboard/TaskStatusBadge";
 import { useEffect, useState } from "react";
-import { getTasks, Task } from "@/lib/api";
-
-const months = [
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+import { getRoadmap, saveRoadmap } from "@/lib/api";
 
 export default function DashboardRoadmapPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await getTasks();
-        setTasks(data);
+        const data = await getRoadmap();
+        setContent(data);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load roadmap";
         setError(msg);
@@ -37,10 +27,25 @@ export default function DashboardRoadmapPage() {
     void load();
   }, []);
 
+  async function onSave() {
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      await saveRoadmap(content);
+      setMessage("Saved");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save roadmap";
+      setError(msg);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <DashboardShell
       title="2026 Roadmap"
-      description="Month-by-month roadmap view generated from your live task list. Create and edit tasks in the Tasks section."
+      description="General roadmap notes, completely separate from tasks."
     >
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
@@ -50,42 +55,28 @@ export default function DashboardRoadmapPage() {
 
       {loading ? <p className="mb-4 text-zinc-500">Loading roadmap...</p> : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {months.map((month) => {
-          const items = tasks.filter((task) => task.month === month);
-          const done = items.filter((task) => task.status === "done").length;
-          const progress = items.length === 0 ? 0 : Math.round((done / items.length) * 100);
-
-          return (
-            <div key={month} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">{month}</h2>
-                  <p className="text-sm text-zinc-500">{items.length} planned items</p>
-                </div>
-                <span className="text-sm text-sky-400">{progress}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-zinc-800 overflow-hidden mb-4">
-                <div className="h-full bg-sky-500" style={{ width: `${progress}%` }} />
-              </div>
-              <div className="space-y-3">
-                {items.length > 0 ? (
-                  items.map((task) => (
-                    <div key={task.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
-                      <p className="text-sm font-medium text-white">{task.title}</p>
-                      <div className="mt-2 flex items-center justify-between gap-3">
-                        <span className="text-xs text-zinc-500">{task.category}</span>
-                        <TaskStatusBadge status={task.status} />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-zinc-600">No tasks planned yet.</p>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+        <p className="text-sm text-zinc-400">
+          Keep your high-level roadmap here. This box is for general direction and is not linked to task items.
+        </p>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          disabled={loading}
+          placeholder="Add your general roadmap here..."
+          className="mt-3 min-h-[140px] w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
+        />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-zinc-500">{message || ""}</p>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={saving || loading}
+            className="rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Saving..." : "Save roadmap"}
+          </button>
+        </div>
       </div>
     </DashboardShell>
   );

@@ -21,6 +21,7 @@ DATA_DIR = ROOT / "data"
 PROJECTS_PATH = DATA_DIR / "projects.json"
 TASKS_PATH = DATA_DIR / "tasks.json"
 CONTEXT_PATH = DATA_DIR / "context.md"
+ROADMAP_PATH = DATA_DIR / "roadmap.md"
 MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
 
 DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."
@@ -218,6 +219,14 @@ def _push_context_to_github() -> bool:
         CONTEXT_PATH,
         "backend/data/context.md",
         "Auto-sync: Update context.md from dashboard",
+    )
+
+
+def _push_roadmap_to_github() -> bool:
+    return _push_file_to_github(
+        ROADMAP_PATH,
+        "backend/data/roadmap.md",
+        "Auto-sync: Update roadmap.md from dashboard",
     )
 
 
@@ -678,6 +687,21 @@ def update_context(body: ContextBody) -> dict[str, str]:
     return {"ok": "true"}
 
 
+@app.get("/roadmap", dependencies=[Depends(_require_token)])
+def get_roadmap() -> dict[str, str]:
+    if not ROADMAP_PATH.exists():
+        return {"content": ""}
+    return {"content": ROADMAP_PATH.read_text(encoding="utf-8")}
+
+
+@app.put("/roadmap", dependencies=[Depends(_require_token)])
+def update_roadmap(body: ContextBody) -> dict[str, str]:
+    ROADMAP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ROADMAP_PATH.write_text(body.content, encoding="utf-8")
+    _push_roadmap_to_github()  # Auto-sync to GitHub
+    return {"ok": "true"}
+
+
 @app.post("/ai/chat", dependencies=[Depends(_require_token)])
 def chat(body: ChatBody) -> dict[str, str]:
     tasks = _read_json(TASKS_PATH)
@@ -709,7 +733,7 @@ def download_data():
     from fastapi.responses import StreamingResponse
 
     files = []
-    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, MAINTENANCE_PATH):
+    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, ROADMAP_PATH, MAINTENANCE_PATH):
         try:
             if p.exists():
                 files.append(p)
