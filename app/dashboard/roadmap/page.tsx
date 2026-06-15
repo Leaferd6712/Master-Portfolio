@@ -4,8 +4,92 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 import { useEffect, useState } from "react";
 import { getRoadmap, saveRoadmap } from "@/lib/api";
 
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+type MonthName = (typeof months)[number];
+type MonthNotes = Record<MonthName, string>;
+
+function emptyMonthNotes(): MonthNotes {
+  return {
+    January: "",
+    February: "",
+    March: "",
+    April: "",
+    May: "",
+    June: "",
+    July: "",
+    August: "",
+    September: "",
+    October: "",
+    November: "",
+    December: "",
+  };
+}
+
+function parseRoadmapContent(content: string): MonthNotes {
+  const notes = emptyMonthNotes();
+  const trimmed = content.trim();
+
+  if (!trimmed) {
+    return notes;
+  }
+
+  let matchedAnyMonth = false;
+
+  for (let i = 0; i < months.length; i += 1) {
+    const month = months[i];
+    const nextMonth = i < months.length - 1 ? months[i + 1] : null;
+    const startMarker = `## ${month}`;
+    const start = trimmed.indexOf(startMarker);
+    if (start === -1) {
+      continue;
+    }
+
+    matchedAnyMonth = true;
+    const bodyStart = start + startMarker.length;
+    let bodyEnd = trimmed.length;
+    if (nextMonth) {
+      const nextMarker = `## ${nextMonth}`;
+      const nextIndex = trimmed.indexOf(nextMarker, bodyStart);
+      if (nextIndex !== -1) {
+        bodyEnd = nextIndex;
+      }
+    }
+
+    notes[month] = trimmed.slice(bodyStart, bodyEnd).trim();
+  }
+
+  if (!matchedAnyMonth) {
+    notes.January = trimmed;
+  }
+
+  return notes;
+}
+
+function serializeRoadmapContent(notes: MonthNotes): string {
+  return months
+    .map((month) => {
+      const body = notes[month].trim();
+      return `## ${month}\n${body}`;
+    })
+    .join("\n\n");
+}
+
 export default function DashboardRoadmapPage() {
-  const [content, setContent] = useState("");
+  const [monthNotes, setMonthNotes] = useState<MonthNotes>(emptyMonthNotes());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -15,7 +99,7 @@ export default function DashboardRoadmapPage() {
     async function load() {
       try {
         const data = await getRoadmap();
-        setContent(data);
+        setMonthNotes(parseRoadmapContent(data));
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load roadmap";
         setError(msg);
@@ -32,7 +116,7 @@ export default function DashboardRoadmapPage() {
     setError("");
     setMessage("");
     try {
-      await saveRoadmap(content);
+      await saveRoadmap(serializeRoadmapContent(monthNotes));
       setMessage("Saved");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save roadmap";
@@ -57,15 +141,25 @@ export default function DashboardRoadmapPage() {
 
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
         <p className="text-sm text-zinc-400">
-          Keep your high-level roadmap here. This box is for general direction and is not linked to task items.
+          Keep your high-level roadmap here by month. These notes are not linked to task items.
         </p>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          disabled={loading}
-          placeholder="Add your general roadmap here..."
-          className="mt-3 min-h-[140px] w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
-        />
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          {months.map((month) => (
+            <div key={month} className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+              <h2 className="mb-2 text-sm font-semibold text-white">{month}</h2>
+              <textarea
+                value={monthNotes[month]}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setMonthNotes((prev) => ({ ...prev, [month]: nextValue }));
+                }}
+                disabled={loading}
+                placeholder={`Add ${month} roadmap...`}
+                className="min-h-[110px] w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2.5 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
+              />
+            </div>
+          ))}
+        </div>
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-sm text-zinc-500">{message || ""}</p>
           <button
