@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getRoadmap, saveRoadmap } from "@/lib/api";
 
 const months = [
@@ -92,14 +92,17 @@ export default function DashboardRoadmapPage() {
   const [monthNotes, setMonthNotes] = useState<MonthNotes>(emptyMonthNotes());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await getRoadmap();
         setMonthNotes(parseRoadmapContent(data));
+        hydratedRef.current = true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load roadmap";
         setError(msg);
@@ -111,19 +114,48 @@ export default function DashboardRoadmapPage() {
     void load();
   }, []);
 
-  async function onSave() {
+  useEffect(() => {
+    if (loading || !hydratedRef.current || !dirty) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void persistRoadmap("auto");
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [monthNotes, loading, dirty]);
+
+  async function persistRoadmap(mode: "manual" | "auto") {
     setSaving(true);
     setError("");
-    setMessage("");
+    if (mode === "manual") {
+      setMessage("");
+    }
+
+    const snapshot = serializeRoadmapContent(monthNotes);
+
     try {
-      await saveRoadmap(serializeRoadmapContent(monthNotes));
-      setMessage("Saved");
+      const result = await saveRoadmap(snapshot);
+      setDirty(false);
+
+      if (result.githubSynced) {
+        setMessage("Saved and synced to GitHub");
+      } else if (result.githubSyncEnabled) {
+        setMessage("Saved locally, but GitHub sync failed");
+      } else {
+        setMessage("Saved locally (GitHub sync is not configured)");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save roadmap";
       setError(msg);
     } finally {
       setSaving(false);
     }
+  }
+
+  async function onSave() {
+    await persistRoadmap("manual");
   }
 
   return (
@@ -151,6 +183,8 @@ export default function DashboardRoadmapPage() {
                 value={monthNotes[month]}
                 onChange={(e) => {
                   const nextValue = e.target.value;
+                  setDirty(true);
+                  setMessage("Unsaved changes...");
                   setMonthNotes((prev) => ({ ...prev, [month]: nextValue }));
                 }}
                 disabled={loading}
@@ -165,7 +199,7 @@ export default function DashboardRoadmapPage() {
           <button
             type="button"
             onClick={onSave}
-            disabled={saving || loading}
+            disabled={saving || loading || !dirty}
             className="rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save roadmap"}

@@ -238,6 +238,10 @@ def _push_maintenance_to_github() -> bool:
     )
 
 
+def _github_sync_enabled() -> bool:
+    return bool(GITHUB_TOKEN and GITHUB_USERNAME and GITHUB_REPO)
+
+
 def _token_from_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
@@ -695,11 +699,15 @@ def get_roadmap() -> dict[str, str]:
 
 
 @app.put("/roadmap", dependencies=[Depends(_require_token)])
-def update_roadmap(body: ContextBody) -> dict[str, str]:
+def update_roadmap(body: ContextBody) -> dict[str, Any]:
     ROADMAP_PATH.parent.mkdir(parents=True, exist_ok=True)
     ROADMAP_PATH.write_text(body.content, encoding="utf-8")
-    _push_roadmap_to_github()  # Auto-sync to GitHub
-    return {"ok": "true"}
+    synced = _push_roadmap_to_github()  # Auto-sync to GitHub
+    return {
+        "ok": "true",
+        "githubSynced": synced,
+        "githubSyncEnabled": _github_sync_enabled(),
+    }
 
 
 @app.post("/ai/chat", dependencies=[Depends(_require_token)])

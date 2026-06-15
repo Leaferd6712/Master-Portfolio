@@ -176,13 +176,24 @@ export async function getRoadmap(): Promise<string> {
   return data.content as string;
 }
 
-export async function saveRoadmap(content: string): Promise<void> {
+export async function saveRoadmap(
+  content: string
+): Promise<{ githubSynced: boolean; githubSyncEnabled: boolean }> {
   const res = await fetch("/api/roadmap", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
   });
-  await readJson<Record<string, string>>(res);
+  const data = await readJson<{
+    ok: string;
+    githubSynced?: boolean;
+    githubSyncEnabled?: boolean;
+  }>(res);
+
+  return {
+    githubSynced: Boolean(data.githubSynced),
+    githubSyncEnabled: Boolean(data.githubSyncEnabled),
+  };
 }
 
 // ── AI Chat (Phase 5) ─────────────────────────────────────────────────────────
