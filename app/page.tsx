@@ -51,11 +51,10 @@ export default function HomePage() {
           Hello, I&apos;m
         </p>
         <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight">
-          Mathias X
+          Mathias
         </h1>
         <p className="mt-5 text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed">
-          Building at the intersection of AI, robotics, and software — one
-          project at a time.
+          Here are all my projects
         </p>
         <div className="flex flex-wrap gap-4 mt-10">
           <Link
