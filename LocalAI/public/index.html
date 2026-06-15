@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Local AI Chat</title>
+</head>
+<body>
+
+  <h1>Local AI Chat</h1>
+
+<input
+id="msg"
+type="text"
+placeholder="Type a message"
+style="width:500px;"
+
+>
+
+  <button id="sendBtn" onclick="send()">
+    Send
+  </button>
+
+  <hr>
+
+  <pre id="out"></pre>
+
+  <script>
+    async function send() {
+      const btn = document.getElementById('sendBtn');
+      const out = document.getElementById('out');
+      const msg = document.getElementById('msg').value;
+
+      try {
+        btn.disabled = true;
+        out.textContent = 'Sending...';
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: msg })
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+
+        const data = await response.json();
+        out.textContent = data.reply;
+      } catch (err) {
+        out.textContent = 'Error: ' + (err.message || err);
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+</html>

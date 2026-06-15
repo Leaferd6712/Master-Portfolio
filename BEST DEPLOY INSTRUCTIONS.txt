@@ -1,18 +1,13 @@
-DEPLOYMENT — SINGLE TUNNEL WORKFLOW
-====================================
-You need 4 terminals open. Do them in this exact order.
-
-
 TERMINAL 1 — FastAPI backend
------------------------------
+
 cd "C:\Users\663208\Downloads\Master-Portfolio\backend"
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 
-Leave running. You should see: INFO: Application startup complete.
+
 
 
 TERMINAL 2 — LM Studio
------------------------
+
 Open the LM Studio app, load your model (e.g. qwen2.5-coder-3b-instruct),
 go to the "Local Server" tab and click "Start Server".
 It binds to port 1234 automatically.
@@ -22,7 +17,7 @@ You should see: Server is running at http://127.0.0.1:1234
 
 TERMINAL 3 — Node proxy  ← THIS MUST BE RUNNING BEFORE NGROK
 --------------------------------------------------------------
-cd "C:\Users\mcmat\Downloads\LocalAI"
+cd "LocalAI"
 node server.js
 
 Leave running. You should see: Open http://localhost:3000 (bound to 0.0.0.0)
@@ -36,60 +31,3 @@ TERMINAL 4 — ngrok (one tunnel, covers everything)
 ---------------------------------------------------
 ngrok http 3000
 
-Copy the HTTPS URL it shows, e.g: https://xxxx-xx-xx.ngrok-free.app
-You'll use this in the next step.
-
-
-VERCEL — set these two environment variables
----------------------------------------------
-Vercel Dashboard → your project → Settings → Environment Variables
-
-  Key                Value
-  ─────────────────────────────────────────────────────────────────
-  BACKEND_API_URL    https://xxxx-xx-xx.ngrok-free.app/backend
-  LOCAL_AI_URL       https://xxxx-xx-xx.ngrok-free.app
-
-Both keys use the same ngrok URL — just different path prefixes.
-
-After saving, go to Deployments → click ••• on the latest deploy → Redeploy.
-
-
-VERIFY IT WORKS
----------------
-1. Open your Vercel site → /dashboard/login → enter your password
-2. Go to /dashboard/ai → send a message → you get a real AI reply
-3. Go to /dashboard/projects → your projects load
-
-
-BACKEND PASSWORD
-----------------
-Edit backend/.env and set:
-
-  DASHBOARD_PASSWORD=your-strong-password
-  PORT=8000
-
-Restart Terminal 1 after any change.
-
-
-LOCAL DEV (no ngrok needed)
-----------------------------
-.env.local in the repo root already contains:
-
-  LOCAL_AI_URL=http://127.0.0.1:1234
-  BACKEND_API_URL=http://127.0.0.1:8000
-
-Start Next.js dev server:
-cd "C:\Users\663208\Downloads\Master-Portfolio"
-npm run dev
-
-Visit http://localhost:3000
-
-
-ERROR REFERENCE
----------------
-ERR_NGROK_8012 — Terminal 3 (node server.js) is not running. Start it, then restart ngrok.
-401 on login    — DASHBOARD_PASSWORD in backend/.env doesn't match what you typed.
-502 on AI chat  — LM Studio server is not started (Terminal 2). Load a model and start the server.
-
-IMPORTANT: ngrok URLs change every time you restart ngrok.
-Update BACKEND_API_URL and LOCAL_AI_URL in Vercel and redeploy whenever the URL changes.
