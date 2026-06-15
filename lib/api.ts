@@ -196,15 +196,21 @@ export async function saveRoadmap(
   };
 }
 
-// ── AI Chat (Phase 5) ─────────────────────────────────────────────────────────
+// ── AI Chat ───────────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
 export async function sendChatMessage(
-  message: string
+  message: string,
+  history: ChatMessage[] = []
 ): Promise<{ reply: string }> {
   const res = await fetch("/api/ai/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, history }),
   });
   return readJson<{ reply: string }>(res);
 }
