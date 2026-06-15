@@ -547,5 +547,56 @@
     "progress": 25,
     "hiddenNotes": "",
     "id": "student-hub"
+  },
+  {
+    "title": "3D Printing",
+    "description": "Cool prints",
+    "category": "Games",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "none"
+      },
+      {
+        "label": "Demo",
+        "url": "none"
+      }
+    ],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "CAD Sink Extension  \n\nCad keyboard button  \n\n3d prints music boxes  \n\n3d print general stuff \n\n3d print cup cooler like a bigger version of cup put in there and put water \n\n3d printed air cooler \n\nInsane gear ratio 3d print",
+    "id": "3d-printing"
+  },
+  {
+    "title": "///",
+    "description": "///",
+    "category": "Tools",
+    "status": "///",
+    "github": "",
+    "demo": "",
+    "links": [],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "",
+    "id": "project"
+  },
+  {
+    "title": "Minecraft Redstone Calculator",
+    "description": "rffasd",
+    "category": "Tools",
+    "status": "planned",
+    "github": "",
+    "demo": "",
+    "links": [],
+    "image": "",
+    "techs": [],
+    "progress": 0,
+    "hiddenNotes": "",
+    "id": "minecraft-redstone-calculator"
   }
 ]
