@@ -2,15 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getSiteSettings, type SiteTab } from "@/lib/api";
 
-const links = [
+const staticStartLinks = [
   { href: "/", label: "Home" },
   { href: "/projects", label: "Projects" },
+];
+
+const fallbackTabs: SiteTab[] = [
   { href: "/ai", label: "AI / ML" },
   { href: "/games", label: "Games" },
   { href: "/cad", label: "CAD" },
   { href: "/backend-tools", label: "Backend" },
+].map((tab) => ({
+  ...tab,
+  icon: "",
+  desc: "",
+  showInNav: true,
+  showInInterests: true,
+}));
+
+const staticEndLinks = [
   { href: "/notes", label: "Notes" },
   { href: "/contact", label: "Contact" },
 ];
@@ -18,6 +31,27 @@ const links = [
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [tabs, setTabs] = useState<SiteTab[]>(fallbackTabs);
+
+  useEffect(() => {
+    async function loadTabs() {
+      try {
+        const settings = await getSiteSettings();
+        const navTabs = settings.tabs.filter((tab) => tab.showInNav);
+        setTabs(navTabs.length ? navTabs : fallbackTabs);
+      } catch {
+        setTabs(fallbackTabs);
+      }
+    }
+
+    void loadTabs();
+  }, []);
+
+  const links = [
+    ...staticStartLinks,
+    ...tabs.map((tab) => ({ href: tab.href, label: tab.label })),
+    ...staticEndLinks,
+  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">

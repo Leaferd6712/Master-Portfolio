@@ -36,6 +36,19 @@ export interface MaintenanceMode {
   message: string;
 }
 
+export interface SiteTab {
+  label: string;
+  href: string;
+  icon: string;
+  desc: string;
+  showInNav: boolean;
+  showInInterests: boolean;
+}
+
+export interface SiteSettings {
+  tabs: SiteTab[];
+}
+
 async function readJson<T>(res: Response): Promise<T> {
   let payload: unknown = null;
   try {
@@ -232,4 +245,22 @@ export async function updateMaintenanceMode(
     body: JSON.stringify({ enabled, message }),
   });
   return readJson<MaintenanceMode>(res);
+}
+
+// Site tabs
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const res = await fetch("/api/site-settings", { cache: "no-store" });
+  return readJson<SiteSettings>(res);
+}
+
+export async function updateSiteSettings(
+  settings: SiteSettings
+): Promise<SiteSettings> {
+  const res = await fetch("/api/site-settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  return readJson<SiteSettings>(res);
 }

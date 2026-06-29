@@ -9,6 +9,7 @@ const dashboardLinks = [
   { href: "/dashboard/all-tasks", label: "All Tasks" },
   { href: "/dashboard/roadmap", label: "Roadmap" },
   { href: "/dashboard/projects", label: "Projects" },
+  { href: "/dashboard/tabs", label: "Tabs" },
   { href: "/dashboard/context", label: "Context" },
   { href: "/dashboard/ai", label: "AI Panel" },
 ];

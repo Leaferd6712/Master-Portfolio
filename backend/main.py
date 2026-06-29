@@ -23,6 +23,7 @@ TASKS_PATH = DATA_DIR / "tasks.json"
 CONTEXT_PATH = DATA_DIR / "context.md"
 ROADMAP_PATH = DATA_DIR / "roadmap.md"
 MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
+SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
 
 DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."
 
@@ -137,6 +138,19 @@ class MaintenanceBody(BaseModel):
     message: str = DEFAULT_MAINTENANCE_MESSAGE
 
 
+class SiteTab(BaseModel):
+    label: str
+    href: str = "/projects"
+    icon: str = ""
+    desc: str = ""
+    showInNav: bool = True
+    showInInterests: bool = True
+
+
+class SiteSettingsBody(BaseModel):
+    tabs: list[SiteTab] = Field(default_factory=list)
+
+
 def _read_json(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -151,6 +165,22 @@ def _write_json(path: Path, data: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+
+
+def _read_json_object(path: Path, default: dict[str, Any]) -> dict[str, Any]:
+    if not path.exists():
+        return default
+    with path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        return default
+    return data
+
+
+def _write_json_object(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 def _push_file_to_github(local_path: Path, repo_path: str, message: str) -> bool:
@@ -235,6 +265,14 @@ def _push_maintenance_to_github() -> bool:
         MAINTENANCE_PATH,
         "backend/data/maintenance.json",
         "Auto-sync: Update maintenance.json from dashboard",
+    )
+
+
+def _push_site_settings_to_github() -> bool:
+    return _push_file_to_github(
+        SITE_SETTINGS_PATH,
+        "backend/data/site-settings.json",
+        "Auto-sync: Update site-settings.json from dashboard",
     )
 
 
@@ -475,6 +513,96 @@ def _write_maintenance(data: dict[str, Any]) -> None:
         json.dump(data, f, indent=2)
 
 
+def _default_site_settings() -> dict[str, Any]:
+    return {
+        "tabs": [
+            {
+                "label": "Robotics",
+                "href": "/projects",
+                "icon": "🤖",
+                "desc": "Building autonomous systems and physical computing projects.",
+                "showInNav": False,
+                "showInInterests": True,
+            },
+            {
+                "label": "AI / ML",
+                "href": "/ai",
+                "icon": "🧠",
+                "desc": "YOLO models, classifiers, vision systems, and neural nets.",
+                "showInNav": True,
+                "showInInterests": True,
+            },
+            {
+                "label": "Coding",
+                "href": "/projects",
+                "icon": "💻",
+                "desc": "Python, TypeScript, system design, and backend APIs.",
+                "showInNav": False,
+                "showInInterests": True,
+            },
+            {
+                "label": "Games",
+                "href": "/games",
+                "icon": "🎮",
+                "desc": "Mini simulations, 2D games, and interactive experiences.",
+                "showInNav": True,
+                "showInInterests": True,
+            },
+            {
+                "label": "CAD",
+                "href": "/cad",
+                "icon": "📐",
+                "desc": "3D design, prints, prototypes, and Fusion 360 projects.",
+                "showInNav": True,
+                "showInInterests": True,
+            },
+            {
+                "label": "Backend",
+                "href": "/backend-tools",
+                "icon": "⚙️",
+                "desc": "APIs, tools, dashboards, and server-side systems.",
+                "showInNav": True,
+                "showInInterests": True,
+            },
+        ]
+    }
+
+
+def _sanitize_site_settings(data: dict[str, Any]) -> dict[str, Any]:
+    tabs = data.get("tabs", [])
+    if not isinstance(tabs, list):
+        tabs = []
+
+    clean_tabs: list[dict[str, Any]] = []
+    for tab in tabs:
+        if not isinstance(tab, dict):
+            continue
+        label = str(tab.get("label", "")).strip()
+        if not label:
+            continue
+        href = str(tab.get("href", "")).strip() or "/projects"
+        if not href.startswith("/") and not href.startswith("http"):
+            href = f"/{href}"
+        clean_tabs.append(
+            {
+                "label": label,
+                "href": href,
+                "icon": str(tab.get("icon", "")).strip(),
+                "desc": str(tab.get("desc", "")).strip(),
+                "showInNav": bool(tab.get("showInNav", True)),
+                "showInInterests": bool(tab.get("showInInterests", True)),
+            }
+        )
+
+    return {"tabs": clean_tabs}
+
+
+def _read_site_settings() -> dict[str, Any]:
+    return _sanitize_site_settings(
+        _read_json_object(SITE_SETTINGS_PATH, _default_site_settings())
+    )
+
+
 @app.get("/")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "portfolio-backend"}
@@ -500,6 +628,19 @@ def update_maintenance(body: MaintenanceBody) -> dict[str, Any]:
     }
     _write_maintenance(payload)
     _push_maintenance_to_github()  # Auto-sync to GitHub
+    return payload
+
+
+@app.get("/site-settings")
+def get_site_settings() -> dict[str, Any]:
+    return _read_site_settings()
+
+
+@app.put("/site-settings", dependencies=[Depends(_require_token)])
+def update_site_settings(body: SiteSettingsBody) -> dict[str, Any]:
+    payload = _sanitize_site_settings(body.model_dump())
+    _write_json_object(SITE_SETTINGS_PATH, payload)
+    _push_site_settings_to_github()  # Auto-sync to GitHub
     return payload
 
 
@@ -741,7 +882,7 @@ def download_data():
     from fastapi.responses import StreamingResponse
 
     files = []
-    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, ROADMAP_PATH, MAINTENANCE_PATH):
+    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, ROADMAP_PATH, MAINTENANCE_PATH, SITE_SETTINGS_PATH):
         try:
             if p.exists():
                 files.append(p)

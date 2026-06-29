@@ -1,0 +1,52 @@
+{
+  "tabs": [
+    {
+      "label": "Robotics",
+      "href": "/projects",
+      "icon": "🤖",
+      "desc": "Building autonomous systems and physical computing projects.",
+      "showInNav": false,
+      "showInInterests": true
+    },
+    {
+      "label": "AI / ML",
+      "href": "/ai",
+      "icon": "🧠",
+      "desc": "YOLO models, classifiers, vision systems, and neural nets.",
+      "showInNav": true,
+      "showInInterests": true
+    },
+    {
+      "label": "Coding",
+      "href": "/projects",
+      "icon": "💻",
+      "desc": "Python, TypeScript, system design, and backend APIs.",
+      "showInNav": false,
+      "showInInterests": true
+    },
+    {
+      "label": "Games",
+      "href": "/games",
+      "icon": "🎮",
+      "desc": "Mini simulations, 2D games, and interactive experiences.",
+      "showInNav": true,
+      "showInInterests": true
+    },
+    {
+      "label": "CAD",
+      "href": "/cad",
+      "icon": "📐",
+      "desc": "3D design, prints, prototypes, and Fusion 360 projects.",
+      "showInNav": true,
+      "showInInterests": true
+    },
+    {
+      "label": "Backend",
+      "href": "/backend-tools",
+      "icon": "⚙️",
+      "desc": "APIs, tools, dashboards, and server-side systems.",
+      "showInNav": true,
+      "showInInterests": true
+    }
+  ]
+}
