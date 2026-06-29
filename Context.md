@@ -3,6 +3,9 @@
 > **Last Updated**: April 27, 2026  
 > **Status**: Production-ready. Backend + Frontend fully wired with auth, CRUD, and AI integration.
 
+Before any AI or person reads this, know that this context is very much outdated, only providing some correct information, please ask the owner of this project for more info.
+
+
 ---
 
 ## Table of Contents
@@ -2093,3 +2096,67 @@ id, title, status, priority, category, month, notes
 ---
 
 **Ready to start with Phase 1?** Switch to Agent mode and it will scaffold the Next.js project and build all 8 public pages.
+
+
+Master Portfolio & Personal Operating System (OS) SpecificationLast Updated: April 27, 2026  Status: Production-Ready Blueprint  Target Audience: GitHub Copilot / Next AI Agent & Project Owner  Core Vision: A unified, form-driven control center that eliminates manual HTML editing.  Table of ContentsUser Profile & 2026 Learning StrategySystem Architecture & Core DesignData Schemas2026 Master Execution RoadmapLocal Development SetupCloud Deployment GuidePost-Deploy Testing & Troubleshooting1. User Profile & 2026 Learning Strategy👤 Profile OverviewAcademic Level: Year 8 Student in 2026.  Core Core Interests: Robotics engineering, AI/Machine Learning, full-stack software development, and Fusion 360 CAD design.  Philosophy: Prioritize building real systems, completing existing initiatives, and reducing over-reliance on AI by mastering core programming fundamentals.  🚫 Strict Operational RulesNo FTC Tasks: This workspace is exclusively dedicated to personal projects; FIRST Tech Challenge work must remain completely separate.  One Game at a Time: Limit game development to a single active title to prevent project abandonment.  The One-In, One-Out Rule: Before introducing a new feature or project to the roadmap, at least one current task must be fully marked as completed.  2. System Architecture & Core DesignThe system acts as a Personal Operating System split into a public portfolio and a secure admin panel.  portfolio/                    ← Next.js Frontend (Deployed on Vercel)
+├── app/                      
+│   ├── layout.tsx            ← Root layout (Navbar + Footer)
+│   ├── page.tsx              ← Home Page
+│   ├── projects/             ← Main Gallery (Search & Filter)
+│   │   └── [id]/page.tsx     ← Dynamic Project Detail Page
+│   ├── ai/                   ← ML/Vision Filtered View
+│   ├── games/                ← Games Filtered View
+│   ├── cad/                  ← CAD Blueprint Gallery
+│   ├── backend-tools/        ← System Tools Filtered View
+│   ├── contact/              ← Contact Details Page
+│   └── dashboard/            ← Secure Admin Shell
+│       ├── login/page.tsx    ← Session Authentication Gate
+│       ├── tasks/page.tsx    ← Kanban Task Interface
+│       ├── roadmap/page.tsx  ← Dynamic 2026 Schedule
+│       ├── projects/page.tsx ← Project Database Forms
+│       └── context/page.tsx  ← context.md Direct Editor
+└── lib/
+    └── api.ts                ← Fetch wrapper (Swaps from local JSON to FastAPI)
+
+backend/                      ← FastAPI Backend (Deployed on Railway)
+├── main.py                   ← Routing, Middleware, & AI Proxies
+├── requirements.txt          ← Python Dependencies
+└── data/                     ← Persistent Flat-File JSON Storage
+    ├── projects.json         
+    ├── tasks.json            
+    └── context.md            
+⚙️ Technology Stack MappingFrontend Layer: Next.js 14 (App Router), TypeScript, Tailwind CSS, deployed via Vercel.  Backend Layer: FastAPI, Uvicorn, Python-dotenv, deployed via Railway.  Storage Engine: Local flat-file JSON storage (upgradable to Supabase PostgreSQL later).  AI Engine: Provider-agnostic API router supporting OpenAI, Google Gemini, and Groq.  🌐 Endpoints MatrixHTTP MethodRouteAuthentication RequiredFunctional PurposeGET/projectsNoFetches the public project portfolio data.  POST/projectsYesAppends a new project record to the database.  PUT/projects/{id}YesUpdates an existing project record.  DELETE/projects/{id}YesDeletes a project record from the database.  GET/tasksYesRetrieves user tasks for the admin Kanban board.  POST/tasksYesCreates a new development or learning task.  PUT/tasks/{id}YesModifies statuses, priorities, or months for a task.  DELETE/tasks/{id}YesPermanently removes a task.  GET/contextYesLoads the raw context.md file contents.  PUT/contextYesOverwrites and saves updates to context.md.  POST/auth/loginNoValidates passwords and issues secure session tokens.  POST/ai/chatYesInjects project context into LLM chats for advice.  3. Data Schemas📁 Projects Data Schema (projects.json)JSON{
+  "id": "mini-market-simulation",
+  "title": "Mini Market Simulation",
+  "description": "An interactive Pygame environment modeling market operations.",
+  "category": "Games",
+  "status": "in progress",
+  "github": "https://github.com/username/repo",
+  "demo": "https://demo.com",
+  "image": "/assets/market.gif",
+  "techs": ["Python", "Pygame"]
+}
+⚠️ Constraint: The category string field must exactly match one of the predefined target values: ML / Vision, Games, CAD, Backend, or Tools.  📋 Tasks Data Schema (tasks.json)JSON{
+  "id": "101",
+  "title": "Master Python try/except blocks",
+  "status": "in progress",
+  "priority": "high",
+  "category": "Python",
+  "month": "June",
+  "notes": "Essential for protecting CLI parsing routines from input runtime errors."
+}
+4. 2026 Master Execution Roadmap🏗️ May: Portfolio Shell & FoundationsLearning Sprint: Master HTML boilerplate code, CSS Flexbox layouts, and basic asynchronous JavaScript fetch() operations.  Build Targets: Scaffold the Next.js static layout, configure the context.md template, and build an input dashboard backed by local browser storage.  Project Review: Clean up codebase file structures and write a professional README.md for KartBlitz.  🐍 June: Python Core & Utility ToolsLearning Sprint: Deep-dive into structured data forms (dictionaries and nested lists), complex loop mechanics, and strict runtime error handling.  Build Targets: Code an F1 Telemetry CLI parser, a local PC Hardware Compatibility reporting tool, and an automated text-logged Pomodoro study timer.  Project Review: Transition active game development focus to solidifying single-game loop logic blocks.  🧹 July: Git Workflow & Code ArchitectureLearning Sprint: Establish standard branching mechanisms (feature-ui staging workflows), explicit split-directory patterns, and virtual environments.  Build Targets: Refactor old monolithic scripts into clean, multi-file modular codebases (e.g., separating game physics engines into isolated utility files).  Project Review: Audit and structure core code components for Mini Market Simulation and Dodge Master.  📊 August: Mathematical Machine LearningLearning Sprint: Study numerical data preparation methods, training vs. testing splits, data classification routines, regression mapping, and evaluation matrices.  Build Targets: Train an F1 race results podium predictor script alongside a GPU specification tier classifier.  Project Review: Integrate at least one highly functional standalone feature to an existing game project.  👁️ September: OpenCV & Object TrackingLearning Sprint: Understand raw image preprocessing matrices, custom edge-detection calculations, and sequential coordinate-tracking logic formulas.  Build Targets: Program a color-isolated real-time tracking script alongside a directional counting system for bounding boxes crossing specific coordinate lines.  Project Review: Re-engineer past YOLO object detection code repositories to process and use the captured metadata streams.  🧠 October: Deep Learning & PyTorchLearning Sprint: Understand internal neural network layouts, deep tensor math structures, explicit training loops, and loss convergence optimization functions.  Build Targets: Implement a handwritten digit classifier model from scratch utilizing the classic MNIST dataset.  Project Review: Optimize active execution loops for rendering performance and introduce a systematic player progression feature.  🛠️ November: Full-Stack Backend & AI IntegrationLearning Sprint: Learn client-server request/response communication flows, RESTful API endpoint configuration, and SQL query structures.  Build Targets: Write a production FastAPI server using persistent SQLite databases, and configure an internal AI context endpoint.  Project Review: Implement a backend ingestion routine that feeds context.md straight into an LLM API to output tailored developmental goals.  📐 December: CAD, Hardware, & DeploymentsLearning Sprint: Master parametric design rules, component tolerance assembly strategies, laser-cutting assembly joins, and microcontrollers.  Build Targets: Design and 3D print the tailored custom speaker enclosures (Alpha Bot / Hex-Shell Turtle), wiring up an internal ESP32 or Arduino system.  Project Review: Capture rich demo media for all active project milestones, run absolute compiler checks, and complete the comprehensive system deployment.  5. Local Development Setup📦 Step 1: Install Frontend DependenciesBashcd path/to/master-portfolio
+npm install
+ℹ️ Installs Next.js, React, TypeScript, Tailwind CSS, and all necessary node modules.  🔐 Step 2: Configure Backend Environment VariablesDuplicate the provided sample configuration file:  Bashcp backend/.env.example backend/.env
+Open backend/.env in your text editor and specify your local values:  Ini, TOMLDASHBOARD_PASSWORD=your-strong-custom-password
+PORT=8000
+CORS_ORIGINS=http://localhost:3000
+🐍 Step 3: Install Backend Python DependenciesBashcd backend
+pip install -r requirements.txt
+cd ..
+💡 Windows Permissions Workaround: If your system triggers an Access is denied alert inside backend/venv, run the installation via the user space instead:  Bashpython -m pip install --user -r requirements.txt
+🚀 Step 4: Boot Up Both EnvironmentsTerminal 1 (FastAPI Backend):  Bashcd backend
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
+Terminal 2 (Next.js Frontend):  Bashnpm run dev
+Open your browser and navigate to http://localhost:3000.  6. Cloud Deployment Guide🚂 Part A: FastAPI Backend on RailwayPrepare Source Code: Initialize Git locally, commit your updates, and push the codebase to a new repository on GitHub.  Provision Resource: Create a new project workspace inside your Railway dashboard and select Deploy from GitHub repo.  Adjust Root Directory: Access your project settings tab and modify the Root Directory from / over to backend.  Configure Explicit Build & Start Directives:  Build Command: pip install -r requirements.txtStart Command: uvicorn main:app --host 0.0.0.0 --port $PORTSet Production Environment Variables: Under the variables view tab, configure your system parameters:  DASHBOARD_PASSWORD = your-secure-production-passwordPORT = 8000CORS_ORIGINS = [https://your-portfolio-abc.vercel.app](https://your-portfolio-abc.vercel.app),http://localhost:3000 (Update this value once your Vercel address is live)  AI_API_KEY = your-secret-api-key-string (Optional)  📐 Part B: Next.js Frontend on VercelLink Repository: Access your Vercel dashboard account, create a new project workspace, and import your portfolio GitHub repository.  Environment Variables Config: Under your Vercel project deployment wizard, insert the target environment parameters:  Key: BACKEND_API_URLValue: Your live Railway deployment domain (e.g., [https://backend-production.up.railway.app](https://backend-production.up.railway.app)).  Run Production Compilation: Click Deploy and let the automated compilation script finish building your web app.  Complete the CORS Connection Loop: Copy the newly created Vercel live production URL and append it into the CORS_ORIGINS variable inside your Railway settings view.  7. Post-Deploy Testing & Troubleshooting🧪 Verification Testing PlaybookTest 1 (Public View Availability): Navigate to your live production Vercel address and verify that the layout and the dynamic filters load cleanly without rendering faults.  Test 2 (Security Authentication Gate): Access /dashboard/login, supply your configured DASHBOARD_PASSWORD, and confirm that the system correctly saves authentication cookies and grants access to the admin interface.  Test 3 (Data Persistence Operations): Use the administrative project manager form to save a dummy project entry, then return to your public gallery to check that the newly created card renders instantly.  Test 4 (Roadmap Processing Engine): Create a task assigned to a target calendar month and verify that the timeline visualization updates its progress metrics automatically.  🛠️ Common Incidents & Solutions❌ Terminal output returns "Uvicorn command not recognized"Root Cause: The global system executable path has not resolved correctly.  Mitigation: Invoke the server instance directly via Python's module routing layer instead:  Bashpython -m uvicorn main:app --host 127.0.0.1 --port 8000
+❌ The dashboard interface reports "Cannot connect to backend"Root Cause: Invalid CORS rules or misconfigured environment paths.  Mitigation: Check that your production Vercel BACKEND_API_URL points exactly to your active Railway link, and verify that there are no trailing forward slashes (/) appended to your variables.  ❌ The deployment engine crashes during compilation on VercelRoot Cause: Broken static imports or missing project environment variables.  Mitigation: Launch your local console and inspect the complete build step by executing npm run build locally; fix any discovered compiler layout exceptions before pushing updates to your GitHub branch.  
