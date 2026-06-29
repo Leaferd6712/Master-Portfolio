@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { getProjects } from "@/lib/api";
+import { projectMatchesCategory } from "@/lib/categories";
 
 export default function CADPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -11,7 +12,7 @@ export default function CADPage() {
     async function load() {
       try {
         const all = await getProjects();
-        setProjects(all.filter((p) => p.category === "CAD"));
+        setProjects(all.filter((p) => projectMatchesCategory(p, "CAD")));
       } catch {
         setProjects([]);
       }

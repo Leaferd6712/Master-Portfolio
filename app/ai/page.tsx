@@ -3,6 +3,7 @@
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { useEffect, useState } from "react";
 import { getProjects } from "@/lib/api";
+import { projectMatchesCategory } from "@/lib/categories";
 
 export default function AIPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -11,7 +12,14 @@ export default function AIPage() {
     async function load() {
       try {
         const all = await getProjects();
-        setProjects(all.filter((p) => p.category === "ML / Vision"));
+        setProjects(
+          all.filter(
+            (p) =>
+              projectMatchesCategory(p, "AI / ML") ||
+              projectMatchesCategory(p, "ML / Vision") ||
+              projectMatchesCategory(p, "AI")
+          )
+        );
       } catch {
         setProjects([]);
       }

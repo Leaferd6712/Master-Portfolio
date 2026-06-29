@@ -3,6 +3,7 @@
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { useEffect, useState } from "react";
 import { getProjects } from "@/lib/api";
+import { projectMatchesCategory } from "@/lib/categories";
 
 export default function BackendToolsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -12,7 +13,12 @@ export default function BackendToolsPage() {
       try {
         const all = await getProjects();
         setProjects(
-          all.filter((p) => p.category === "Backend" || p.category === "Tools")
+          all.filter(
+            (p) =>
+              projectMatchesCategory(p, "Backend") ||
+              projectMatchesCategory(p, "Tools") ||
+              projectMatchesCategory(p, "Coding")
+          )
         );
       } catch {
         setProjects([]);

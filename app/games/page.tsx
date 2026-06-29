@@ -3,6 +3,7 @@
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { useEffect, useState } from "react";
 import { getProjects } from "@/lib/api";
+import { projectMatchesCategory } from "@/lib/categories";
 
 export default function GamesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -11,7 +12,7 @@ export default function GamesPage() {
     async function load() {
       try {
         const all = await getProjects();
-        setProjects(all.filter((p) => p.category === "Games"));
+        setProjects(all.filter((p) => projectMatchesCategory(p, "Games")));
       } catch {
         setProjects([]);
       }

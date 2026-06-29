@@ -22,8 +22,9 @@ export interface Task {
   month: string;
   notes: string;
   projectId: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
+  timeframe: TimeframeOption;
 }
 
 export interface ReorderTaskPayload {
@@ -43,10 +44,24 @@ export interface SiteTab {
   desc: string;
   showInNav: boolean;
   showInInterests: boolean;
+  children?: SiteTab[];
 }
 
 export interface SiteSettings {
   tabs: SiteTab[];
+}
+
+export type TimeframeOption = "1 week" | "2 weeks" | "3 weeks" | "4 weeks";
+
+export interface NoteEntry {
+  id: string;
+  title: string;
+  projectId: string;
+  summary: string;
+  content: string;
+  tags: string[];
+  published: boolean;
+  updatedAt: string;
 }
 
 async function readJson<T>(res: Response): Promise<T> {
@@ -263,4 +278,20 @@ export async function updateSiteSettings(
     body: JSON.stringify(settings),
   });
   return readJson<SiteSettings>(res);
+}
+
+// Notes
+
+export async function getNotes(): Promise<NoteEntry[]> {
+  const res = await fetch("/api/notes", { cache: "no-store" });
+  return readJson<NoteEntry[]>(res);
+}
+
+export async function updateNotes(notes: NoteEntry[]): Promise<NoteEntry[]> {
+  const res = await fetch("/api/notes", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notes }),
+  });
+  return readJson<NoteEntry[]>(res);
 }

@@ -10,6 +10,7 @@ const dashboardLinks = [
   { href: "/dashboard/roadmap", label: "Roadmap" },
   { href: "/dashboard/projects", label: "Projects" },
   { href: "/dashboard/tabs", label: "Tabs" },
+  { href: "/dashboard/notes", label: "Notes" },
   { href: "/dashboard/context", label: "Context" },
   { href: "/dashboard/ai", label: "AI Panel" },
 ];

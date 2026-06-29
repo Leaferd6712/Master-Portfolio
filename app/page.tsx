@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { getProjects, getSiteSettings, type SiteTab } from "@/lib/api";
+import { publicProjects } from "@/lib/categories";
 
 const fallbackInterests: SiteTab[] = [
   {
@@ -51,7 +52,9 @@ export default function HomePage() {
           getProjects(),
           getSiteSettings(),
         ]);
-        setFeatured(projects.slice(0, 3));
+        const visibleProjects = publicProjects(projects);
+        const markedFeatured = visibleProjects.filter((project) => project.featured);
+        setFeatured((markedFeatured.length ? markedFeatured : visibleProjects).slice(0, 3));
 
         const interestTabs = settings.tabs.filter((tab) => tab.showInInterests);
         setInterests(interestTabs.length ? interestTabs : fallbackInterests);
@@ -123,9 +126,13 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {featured.map((p) => (
-            <ProjectCard key={p.id} project={p} />
-          ))}
+          {featured.length > 0 ? (
+            featured.map((p) => <ProjectCard key={p.id} project={p} />)
+          ) : (
+            <div className="md:col-span-3 rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-400">
+              No featured projects are published yet.
+            </div>
+          )}
         </div>
       </section>
     </div>

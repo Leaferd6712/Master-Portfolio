@@ -2,20 +2,38 @@
 
 import { useState, useMemo, useEffect } from "react";
 import ProjectCard, { Project } from "@/components/ProjectCard";
-import { getProjects } from "@/lib/api";
-
-const CATEGORIES = ["All", "ML / Vision", "Games", "CAD", "Backend", "Tools"];
+import { getProjects, getSiteSettings } from "@/lib/api";
+import { flattenTabs, projectMatchesCategory } from "@/lib/categories";
 
 export default function ProjectsPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState([
+    { label: "ML / Vision", depth: 0 },
+    { label: "Games", depth: 0 },
+    { label: "CAD", depth: 0 },
+    { label: "Backend", depth: 0 },
+    { label: "Tools", depth: 0 },
+  ]);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await getProjects();
+        const [data, settings] = await Promise.all([getProjects(), getSiteSettings()]);
         setProjects(data);
+        const nodes = flattenTabs(settings.tabs)
+          .filter((node) => node.label !== "Notes" && node.label !== "Contact")
+          .map((node) => ({ label: node.label, depth: node.depth }));
+        const projectCategories = Array.from(
+          new Set(data.map((project) => project.category).filter(Boolean))
+        ).map((label) => ({ label, depth: 0 }));
+        const seen = new Set<string>();
+        setCategories([...nodes, ...projectCategories].filter((item) => {
+          if (seen.has(item.label)) return false;
+          seen.add(item.label);
+          return true;
+        }));
       } catch {
         setProjects([]);
       }
@@ -26,7 +44,7 @@ export default function ProjectsPage() {
   const filtered = useMemo(() => {
     return projects.filter((p) => {
       const matchesCategory =
-        activeCategory === "All" || p.category === activeCategory;
+        activeCategory === "All" || projectMatchesCategory(p, activeCategory);
       const q = search.toLowerCase();
       const matchesSearch =
         p.title.toLowerCase().includes(q) ||
@@ -57,17 +75,19 @@ export default function ProjectsPage() {
 
       {/* Category filters */}
       <div className="flex flex-wrap gap-2 mb-10">
-        {CATEGORIES.map((cat) => (
+        {[{ label: "All", depth: 0 }, ...categories].map((cat) => (
           <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
+            key={cat.label}
+            onClick={() => setActiveCategory(cat.label)}
+            style={{ marginLeft: cat.depth ? `${cat.depth * 0.75}rem` : undefined }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeCategory === cat
+              activeCategory === cat.label
                 ? "bg-sky-500 text-white"
                 : "bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-700"
             }`}
           >
-            {cat}
+            {cat.depth ? "↳ " : ""}
+            {cat.label}
           </button>
         ))}
       </div>

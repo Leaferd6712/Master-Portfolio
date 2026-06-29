@@ -5,28 +5,22 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSiteSettings, type SiteTab } from "@/lib/api";
 
-const staticStartLinks = [
-  { href: "/", label: "Home" },
-  { href: "/projects", label: "Projects" },
-];
-
 const fallbackTabs: SiteTab[] = [
+  { href: "/projects", label: "Projects" },
   { href: "/ai", label: "AI / ML" },
   { href: "/games", label: "Games" },
   { href: "/cad", label: "CAD" },
   { href: "/backend-tools", label: "Backend" },
+  { href: "/notes", label: "Notes" },
+  { href: "/contact", label: "Contact" },
 ].map((tab) => ({
   ...tab,
   icon: "",
   desc: "",
   showInNav: true,
-  showInInterests: true,
+  showInInterests: false,
+  children: [],
 }));
-
-const staticEndLinks = [
-  { href: "/notes", label: "Notes" },
-  { href: "/contact", label: "Contact" },
-];
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -47,11 +41,7 @@ export default function Navbar() {
     void loadTabs();
   }, []);
 
-  const links = [
-    ...staticStartLinks,
-    ...tabs.map((tab) => ({ href: tab.href, label: tab.label })),
-    ...staticEndLinks,
-  ];
+  const links = tabs.filter((tab) => tab.showInNav);
 
   return (
     <nav className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
@@ -66,8 +56,20 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <ul className="hidden md:flex gap-6">
+          <li>
+            <Link
+              href="/"
+              className={`text-sm font-medium transition-colors ${
+                pathname === "/"
+                  ? "text-sky-400"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Home
+            </Link>
+          </li>
           {links.map((l) => (
-            <li key={l.href}>
+            <li key={`${l.label}-${l.href}`} className="group relative">
               <Link
                 href={l.href}
                 className={`text-sm font-medium transition-colors ${
@@ -78,6 +80,26 @@ export default function Navbar() {
               >
                 {l.label}
               </Link>
+              {l.children && l.children.length > 0 ? (
+                <div className="invisible absolute left-0 top-full min-w-64 pt-4 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2 shadow-xl">
+                    {l.children.map((child) => (
+                      <Link
+                        key={`${child.label}-${child.href}`}
+                        href={child.href}
+                        className="block rounded-md px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                      >
+                        <span className="block text-zinc-200">{child.label}</span>
+                        {child.children && child.children.length > 0 ? (
+                          <span className="mt-1 block text-xs text-zinc-500">
+                            {child.children.map((item) => item.label).join(" / ")}
+                          </span>
+                        ) : null}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -110,8 +132,21 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-zinc-800 bg-zinc-950">
           <ul className="px-4 py-3 flex flex-col gap-1">
+            <li>
+              <Link
+                href="/"
+                onClick={() => setOpen(false)}
+                className={`block py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  pathname === "/"
+                    ? "text-sky-400 bg-sky-500/10"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                }`}
+              >
+                Home
+              </Link>
+            </li>
             {links.map((l) => (
-              <li key={l.href}>
+              <li key={`${l.label}-${l.href}`}>
                 <Link
                   href={l.href}
                   onClick={() => setOpen(false)}
@@ -123,6 +158,20 @@ export default function Navbar() {
                 >
                   {l.label}
                 </Link>
+                {l.children && l.children.length > 0 ? (
+                  <div className="ml-3 border-l border-zinc-800 pl-2">
+                    {l.children.map((child) => (
+                      <Link
+                        key={`${child.label}-${child.href}`}
+                        href={child.href}
+                        onClick={() => setOpen(false)}
+                        className="block rounded-lg px-3 py-1.5 text-xs text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

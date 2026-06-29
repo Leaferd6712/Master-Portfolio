@@ -24,8 +24,10 @@ CONTEXT_PATH = DATA_DIR / "context.md"
 ROADMAP_PATH = DATA_DIR / "roadmap.md"
 MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
 SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
+NOTES_PATH = DATA_DIR / "notes.json"
 
 DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."
+TIMEFRAME_OPTIONS = {"1 week", "2 weeks", "3 weeks", "4 weeks"}
 
 PASSWORD = os.getenv("DASHBOARD_PASSWORD", "change-this-password")
 
@@ -60,6 +62,7 @@ class ProjectBase(BaseModel):
     title: str
     description: str
     category: str
+    subcategoryPath: list[str] = Field(default_factory=list)
     status: str
     github: str = ""
     demo: str = ""
@@ -68,6 +71,9 @@ class ProjectBase(BaseModel):
     techs: list[str] = Field(default_factory=list)
     progress: int = 0
     hiddenNotes: str = ""
+    featured: bool = False
+    visibility: str = "public"
+    timeframe: str = "2 weeks"
 
 
 class ProjectCreate(ProjectBase):
@@ -78,6 +84,7 @@ class ProjectUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     category: str | None = None
+    subcategoryPath: list[str] | None = None
     status: str | None = None
     github: str | None = None
     demo: str | None = None
@@ -86,6 +93,9 @@ class ProjectUpdate(BaseModel):
     techs: list[str] | None = None
     progress: int | None = None
     hiddenNotes: str | None = None
+    featured: bool | None = None
+    visibility: str | None = None
+    timeframe: str | None = None
 
 
 class TaskBase(BaseModel):
@@ -96,8 +106,9 @@ class TaskBase(BaseModel):
     month: str
     notes: str = ""
     projectId: str
-    startDate: str
+    startDate: str = ""
     endDate: str | None = None
+    timeframe: str = "2 weeks"
 
 
 class TaskCreate(TaskBase):
@@ -114,6 +125,7 @@ class TaskUpdate(BaseModel):
     projectId: str | None = None
     startDate: str | None = None
     endDate: str | None = None
+    timeframe: str | None = None
 
 
 class ReorderTaskItem(BaseModel):
@@ -145,10 +157,26 @@ class SiteTab(BaseModel):
     desc: str = ""
     showInNav: bool = True
     showInInterests: bool = True
+    children: list["SiteTab"] = Field(default_factory=list)
 
 
 class SiteSettingsBody(BaseModel):
     tabs: list[SiteTab] = Field(default_factory=list)
+
+
+class NoteEntry(BaseModel):
+    id: str
+    title: str
+    projectId: str = ""
+    summary: str = ""
+    content: str = ""
+    tags: list[str] = Field(default_factory=list)
+    published: bool = True
+    updatedAt: str = ""
+
+
+class NotesBody(BaseModel):
+    notes: list[NoteEntry] = Field(default_factory=list)
 
 
 def _read_json(path: Path) -> list[dict[str, Any]]:
@@ -164,7 +192,7 @@ def _read_json(path: Path) -> list[dict[str, Any]]:
 def _write_json(path: Path, data: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 def _read_json_object(path: Path, default: dict[str, Any]) -> dict[str, Any]:
@@ -276,6 +304,14 @@ def _push_site_settings_to_github() -> bool:
     )
 
 
+def _push_notes_to_github() -> bool:
+    return _push_file_to_github(
+        NOTES_PATH,
+        "backend/data/notes.json",
+        "Auto-sync: Update notes.json from dashboard",
+    )
+
+
 def _github_sync_enabled() -> bool:
     return bool(GITHUB_TOKEN and GITHUB_USERNAME and GITHUB_REPO)
 
@@ -352,6 +388,25 @@ def _parse_iso_date(value: str | None) -> date | None:
         raise HTTPException(status_code=400, detail="Dates must use YYYY-MM-DD format")
 
 
+def _normalize_timeframe(value: Any) -> str:
+    raw = str(value or "").strip()
+    return raw if raw in TIMEFRAME_OPTIONS else "2 weeks"
+
+
+def _normalize_project(item: dict[str, Any]) -> dict[str, Any]:
+    clean = dict(item)
+    clean["subcategoryPath"] = [
+        str(part).strip()
+        for part in clean.get("subcategoryPath", [])
+        if str(part).strip()
+    ] if isinstance(clean.get("subcategoryPath"), list) else []
+    clean["progress"] = max(0, min(100, _project_progress(clean)))
+    clean["featured"] = bool(clean.get("featured", False))
+    clean["visibility"] = "draft" if str(clean.get("visibility", "")).strip() == "draft" else "public"
+    clean["timeframe"] = _normalize_timeframe(clean.get("timeframe"))
+    return clean
+
+
 def _require_existing_project(project_id: str, projects: list[dict[str, Any]]) -> None:
     normalized = project_id.strip()
     if not normalized:
@@ -369,21 +424,17 @@ def _validate_task_payload(item: dict[str, Any], projects: list[dict[str, Any]])
     _require_existing_project(project_id, projects)
 
     start_raw = str(item.get("startDate", "")).strip()
-    if not start_raw:
-        raise HTTPException(status_code=400, detail="startDate is required")
-
-    start = _parse_iso_date(start_raw)
     end_raw = str(item.get("endDate", "")).strip()
-    end = _parse_iso_date(end_raw) if end_raw else start
-    if start is None or end is None:
-        raise HTTPException(status_code=400, detail="A valid scheduled date is required")
+    start = _parse_iso_date(start_raw) if start_raw else None
+    end = _parse_iso_date(end_raw) if end_raw else None
 
-    if end < start:
+    if start and end and end < start:
         raise HTTPException(status_code=400, detail="endDate cannot be before startDate")
 
     item["projectId"] = project_id
-    item["startDate"] = start.isoformat()
-    item["endDate"] = end.isoformat()
+    item["startDate"] = start.isoformat() if start else ""
+    item["endDate"] = end.isoformat() if end else ""
+    item["timeframe"] = _normalize_timeframe(item.get("timeframe"))
     return item
 
 
@@ -424,8 +475,9 @@ def _sync_tasks_from_projects(tasks: list[dict[str, Any]], projects: list[dict[s
             "month": datetime.now().strftime("%B"),
             "notes": "Auto-created from project progress.",
             "projectId": project_id,
-            "startDate": date.today().isoformat(),
-            "endDate": date.today().isoformat(),
+            "startDate": "",
+            "endDate": "",
+            "timeframe": _normalize_timeframe(project.get("timeframe")),
         }
         tasks.append(item)
         existing_project_ids.add(project_id)
@@ -445,13 +497,11 @@ def _sync_tasks_from_projects(tasks: list[dict[str, Any]], projects: list[dict[s
             changed = True
 
         start_raw = str(task.get("startDate", "")).strip()
-        end_raw = str(task.get("endDate", "")).strip()
-        if not start_raw:
-            task["startDate"] = date.today().isoformat()
-            start_raw = task["startDate"]
+        if "timeframe" not in task or task.get("timeframe") not in TIMEFRAME_OPTIONS:
+            task["timeframe"] = "2 weeks"
             changed = True
-        if not end_raw:
-            task["endDate"] = start_raw
+        if start_raw and "endDate" not in task:
+            task["endDate"] = ""
             changed = True
 
     return tasks, changed
@@ -523,6 +573,7 @@ def _default_site_settings() -> dict[str, Any]:
                 "desc": "Building autonomous systems and physical computing projects.",
                 "showInNav": False,
                 "showInInterests": True,
+                "children": [],
             },
             {
                 "label": "AI / ML",
@@ -531,6 +582,45 @@ def _default_site_settings() -> dict[str, Any]:
                 "desc": "YOLO models, classifiers, vision systems, and neural nets.",
                 "showInNav": True,
                 "showInInterests": True,
+                "children": [
+                    {
+                        "label": "AI",
+                        "href": "/ai",
+                        "icon": "",
+                        "desc": "Applied AI systems and experiments.",
+                        "showInNav": False,
+                        "showInInterests": False,
+                        "children": [],
+                    },
+                    {
+                        "label": "ML / Vision",
+                        "href": "/ai",
+                        "icon": "",
+                        "desc": "Object detection and segmentation work.",
+                        "showInNav": False,
+                        "showInInterests": False,
+                        "children": [
+                            {
+                                "label": "Object detection models",
+                                "href": "/ai",
+                                "icon": "",
+                                "desc": "",
+                                "showInNav": False,
+                                "showInInterests": False,
+                                "children": [],
+                            },
+                            {
+                                "label": "Instance segmentation models",
+                                "href": "/ai",
+                                "icon": "",
+                                "desc": "",
+                                "showInNav": False,
+                                "showInInterests": False,
+                                "children": [],
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 "label": "Coding",
@@ -539,6 +629,7 @@ def _default_site_settings() -> dict[str, Any]:
                 "desc": "Python, TypeScript, system design, and backend APIs.",
                 "showInNav": False,
                 "showInInterests": True,
+                "children": [],
             },
             {
                 "label": "Games",
@@ -547,6 +638,7 @@ def _default_site_settings() -> dict[str, Any]:
                 "desc": "Mini simulations, 2D games, and interactive experiences.",
                 "showInNav": True,
                 "showInInterests": True,
+                "children": [],
             },
             {
                 "label": "CAD",
@@ -555,6 +647,7 @@ def _default_site_settings() -> dict[str, Any]:
                 "desc": "3D design, prints, prototypes, and Fusion 360 projects.",
                 "showInNav": True,
                 "showInInterests": True,
+                "children": [],
             },
             {
                 "label": "Backend",
@@ -563,15 +656,33 @@ def _default_site_settings() -> dict[str, Any]:
                 "desc": "APIs, tools, dashboards, and server-side systems.",
                 "showInNav": True,
                 "showInInterests": True,
+                "children": [],
+            },
+            {
+                "label": "Notes",
+                "href": "/notes",
+                "icon": "📝",
+                "desc": "Project notes and technical write-ups.",
+                "showInNav": True,
+                "showInInterests": False,
+                "children": [],
+            },
+            {
+                "label": "Contact",
+                "href": "/contact",
+                "icon": "@",
+                "desc": "Get in touch.",
+                "showInNav": True,
+                "showInInterests": False,
+                "children": [],
             },
         ]
     }
 
 
-def _sanitize_site_settings(data: dict[str, Any]) -> dict[str, Any]:
-    tabs = data.get("tabs", [])
+def _sanitize_site_tabs(tabs: Any) -> list[dict[str, Any]]:
     if not isinstance(tabs, list):
-        tabs = []
+        return []
 
     clean_tabs: list[dict[str, Any]] = []
     for tab in tabs:
@@ -591,8 +702,14 @@ def _sanitize_site_settings(data: dict[str, Any]) -> dict[str, Any]:
                 "desc": str(tab.get("desc", "")).strip(),
                 "showInNav": bool(tab.get("showInNav", True)),
                 "showInInterests": bool(tab.get("showInInterests", True)),
+                "children": _sanitize_site_tabs(tab.get("children", [])),
             }
         )
+    return clean_tabs
+
+
+def _sanitize_site_settings(data: dict[str, Any]) -> dict[str, Any]:
+    clean_tabs = _sanitize_site_tabs(data.get("tabs", []))
 
     return {"tabs": clean_tabs}
 
@@ -601,6 +718,42 @@ def _read_site_settings() -> dict[str, Any]:
     return _sanitize_site_settings(
         _read_json_object(SITE_SETTINGS_PATH, _default_site_settings())
     )
+
+
+def _sanitize_notes(data: Any) -> list[dict[str, Any]]:
+    if not isinstance(data, list):
+        return []
+
+    clean_notes: list[dict[str, Any]] = []
+    for note in data:
+        if not isinstance(note, dict):
+            continue
+        title = str(note.get("title", "")).strip()
+        content = str(note.get("content", "")).strip()
+        if not title and not content:
+            continue
+        clean_notes.append(
+            {
+                "id": str(note.get("id", "")).strip() or _slugify(title or "note"),
+                "title": title or "Untitled note",
+                "projectId": str(note.get("projectId", "")).strip(),
+                "summary": str(note.get("summary", "")).strip(),
+                "content": content,
+                "tags": [
+                    str(tag).strip()
+                    for tag in note.get("tags", [])
+                    if str(tag).strip()
+                ] if isinstance(note.get("tags"), list) else [],
+                "published": bool(note.get("published", True)),
+                "updatedAt": str(note.get("updatedAt", "")).strip()
+                or datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            }
+        )
+    return clean_notes
+
+
+def _read_notes() -> list[dict[str, Any]]:
+    return _sanitize_notes(_read_json(NOTES_PATH))
 
 
 @app.get("/")
@@ -644,6 +797,22 @@ def update_site_settings(body: SiteSettingsBody) -> dict[str, Any]:
     return payload
 
 
+@app.get("/notes")
+def get_notes(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+    notes = _read_notes()
+    if _has_valid_auth_header(authorization):
+        return notes
+    return [note for note in notes if note.get("published")]
+
+
+@app.put("/notes", dependencies=[Depends(_require_token)])
+def update_notes(body: NotesBody) -> list[dict[str, Any]]:
+    payload = _sanitize_notes([note.model_dump() for note in body.notes])
+    _write_json(NOTES_PATH, payload)
+    _push_notes_to_github()
+    return payload
+
+
 @app.get("/projects")
 def get_projects(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
     maintenance = _read_maintenance()
@@ -651,13 +820,15 @@ def get_projects(authorization: str | None = Header(default=None)) -> list[dict[
     if maintenance.get("enabled") and not is_admin:
         raise HTTPException(status_code=503, detail=str(maintenance.get("message", DEFAULT_MAINTENANCE_MESSAGE)))
 
-    projects = _read_json(PROJECTS_PATH)
+    projects = [_normalize_project(project) for project in _read_json(PROJECTS_PATH)]
     if is_admin:
         return projects
 
     # Never expose internal planning notes to public clients.
     public_projects: list[dict[str, Any]] = []
     for item in projects:
+        if str(item.get("visibility", "public")) == "draft":
+            continue
         sanitized = dict(item)
         sanitized.pop("hiddenNotes", None)
         public_projects.append(sanitized)
@@ -667,7 +838,7 @@ def get_projects(authorization: str | None = Header(default=None)) -> list[dict[
 @app.post("/projects", dependencies=[Depends(_require_token)])
 def add_project(body: ProjectCreate) -> dict[str, Any]:
     projects = _read_json(PROJECTS_PATH)
-    item = body.model_dump()
+    item = _normalize_project(body.model_dump())
     item["id"] = _next_project_id(body.title, projects)
     projects.append(item)
     _write_json(PROJECTS_PATH, projects)
@@ -682,7 +853,7 @@ def update_project(project_id: str, body: ProjectUpdate) -> dict[str, Any]:
 
     for index, item in enumerate(projects):
         if str(item.get("id")) == project_id:
-            updated = {**item, **patch}
+            updated = _normalize_project({**item, **patch})
             projects[index] = updated
             _write_json(PROJECTS_PATH, projects)
             _push_projects_to_github()  # Auto-sync to GitHub
@@ -882,7 +1053,7 @@ def download_data():
     from fastapi.responses import StreamingResponse
 
     files = []
-    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, ROADMAP_PATH, MAINTENANCE_PATH, SITE_SETTINGS_PATH):
+    for p in (PROJECTS_PATH, TASKS_PATH, CONTEXT_PATH, ROADMAP_PATH, MAINTENANCE_PATH, SITE_SETTINGS_PATH, NOTES_PATH):
         try:
             if p.exists():
                 files.append(p)

@@ -10,8 +10,12 @@ export interface Project {
   title: string;
   description: string;
   category: string;
+  subcategoryPath?: string[];
   status: string;
   hiddenNotes?: string;
+  featured?: boolean;
+  visibility?: "public" | "draft";
+  timeframe?: "1 week" | "2 weeks" | "3 weeks" | "4 weeks";
   /** Legacy fields kept for backward compatibility */
   github?: string;
   demo?: string;
