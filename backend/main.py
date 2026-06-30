@@ -24,6 +24,7 @@ CONTEXT_PATH = DATA_DIR / "context.md"
 ROADMAP_PATH = DATA_DIR / "roadmap.md"
 MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
 SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
+SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
 NOTES_PATH = DATA_DIR / "notes.json"
 
 DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."

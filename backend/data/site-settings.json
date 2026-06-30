@@ -1,52 +1,58 @@
 {
   "tabs": [
     {
-      "label": "Robotics",
-      "href": "/projects",
-      "icon": "🤖",
-      "desc": "Building autonomous systems and physical computing projects.",
-      "showInNav": false,
-      "showInInterests": true
-    },
-    {
-      "label": "AI / ML",
-      "href": "/ai",
-      "icon": "🧠",
-      "desc": "YOLO models, classifiers, vision systems, and neural nets.",
+      "label": "Home",
+      "href": "/",
+      "icon": "✨",
+      "desc": "Featured projects and highlights",
       "showInNav": true,
-      "showInInterests": true
+      "showInInterests": true,
+      "children": []
     },
     {
-      "label": "Coding",
-      "href": "/projects",
-      "icon": "💻",
-      "desc": "Python, TypeScript, system design, and backend APIs.",
-      "showInNav": false,
-      "showInInterests": true
+      "label": "ML / Vision",
+      "href": "/projects?category=ML%20/%20Vision",
+      "icon": "🧠",
+      "desc": "YOLO models, classifiers, and vision systems",
+      "showInNav": true,
+      "showInInterests": true,
+      "children": []
     },
     {
       "label": "Games",
-      "href": "/games",
+      "href": "/projects?category=Games",
       "icon": "🎮",
-      "desc": "Mini simulations, 2D games, and interactive experiences.",
+      "desc": "Interactive games and simulations",
       "showInNav": true,
-      "showInInterests": true
+      "showInInterests": true,
+      "children": []
     },
     {
       "label": "CAD",
-      "href": "/cad",
-      "icon": "📐",
-      "desc": "3D design, prints, prototypes, and Fusion 360 projects.",
+      "href": "/projects?category=CAD",
+      "icon": "🧩",
+      "desc": "3D printing and CAD models",
       "showInNav": true,
-      "showInInterests": true
+      "showInInterests": true,
+      "children": []
     },
     {
       "label": "Backend",
-      "href": "/backend-tools",
-      "icon": "⚙️",
-      "desc": "APIs, tools, dashboards, and server-side systems.",
+      "href": "/projects?category=Backend",
+      "icon": "🛠️",
+      "desc": "APIs and backend tooling",
       "showInNav": true,
-      "showInInterests": true
+      "showInInterests": true,
+      "children": []
+    },
+    {
+      "label": "Tools",
+      "href": "/projects?category=Tools",
+      "icon": "🧰",
+      "desc": "Utilities and mini web apps",
+      "showInNav": true,
+      "showInInterests": true,
+      "children": []
     }
   ]
 }
