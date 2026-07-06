@@ -1,0 +1,1167 @@
+My full process plan is to 
+
+Use AI to build your full portfolio system (public pages + private dashboard + AI + tasks + project manager)
+
+Add your current projects + move your to-do list and roadmap into the system
+
+Start following your 2026 plan and build new projects while updating everything inside the portfolio system
+
+Right now in this stage i am doing using ai to build my portfolio
+
+This is what my portfolio should include 
+
+🧠 YOUR PORTFOLIO = “PERSONAL OPERATING SYSTEM”
+Think of this as:
+
+One website that stores everything you’ve ever built + everything you plan to build
+
+Not just a portfolio — a control center
+
+🏗️ CORE STRUCTURE
+🌐 1. PUBLIC SIDE (what people see)
+Pages:
+🏠 Home
+short intro (who you are)
+
+what you’re interested in (robotics, AI, coding)
+
+featured projects (top 3–5)
+
+quick links
+
+📁 Projects (MAIN PAGE)
+This is the most important page.
+
+Features:
+project cards
+
+filters:
+
+ML / Vision
+
+Games
+
+CAD
+
+Backend
+
+Tools
+
+search bar
+
+Each project card:
+
+title
+
+description
+
+tech used
+
+status (finished / in progress)
+
+image or GIF
+
+link to GitHub
+
+link to demo
+
+🧠 AI / Machine Learning
+all your:
+
+YOLO projects
+
+classifiers
+
+segmentation
+
+future ML work
+
+🎮 Games
+mini market simulation
+
+dodge master
+
+kartblitz
+
+blob game
+
+Each should have:
+
+screenshot
+
+play/demo link
+
+short explanation
+
+🧱 CAD / 3D Design
+Fusion 360 designs
+
+renders
+
+STL downloads (later)
+
+⚙️ Backend / Tools
+AI hub
+
+APIs
+
+utilities
+
+systems you build
+
+📝 Notes / Learning
+(optional but powerful)
+
+what you learned
+
+short writeups
+
+experiments
+
+📬 Contact
+email / links
+
+🔒 2. PRIVATE SIDE (YOUR SYSTEM)
+Route:
+
+/dashboard
+This is YOUR space only.
+
+📊 Dashboard (main page)
+Shows:
+
+today’s tasks
+
+current focus
+
+progress
+
+quick add task
+
+✅ Task Manager
+Features:
+
+create/edit/delete tasks
+
+status:
+
+idea
+
+planned
+
+in progress
+
+done
+
+priority
+
+category:
+
+Python
+
+ML
+
+Vision
+
+CAD
+
+Games
+
+Backend
+
+🗺️ Roadmap Page
+Your 2026 roadmap:
+
+May → December
+
+tasks per month
+
+progress tracking
+
+🤖 AI Chat Panel
+This is powerful.
+
+You can say:
+
+“break this into tasks”
+
+“improve my roadmap”
+
+“what should I do next”
+
+“organize my projects”
+
+AI should:
+
+read your tasks
+
+read roadmap
+
+read context.md
+
+suggest edits
+
+📄 context.md Editor
+This is your brain file
+
+Contains:
+
+your goals
+
+your interests
+
+your current projects
+
+your roadmap rules
+
+Editable inside the website.
+
+📁 Project Manager (IMPORTANT)
+Instead of editing HTML manually:
+
+You add projects through a form:
+
+title
+
+description
+
+category
+
+GitHub link
+
+image
+
+status
+
+👉 This automatically updates your portfolio
+
+🔧 HOW EDITING WORKS (NO HTML EDITING)
+You will NOT:
+
+manually write HTML for every project
+
+Instead:
+
+You build:
+“Admin System”
+Form → saves data → renders UI
+
+Example flow:
+You:
+
+go to /dashboard/projects
+
+click “Add Project”
+
+fill form
+
+System:
+
+saves to JSON or database
+
+updates frontend automatically
+
+🧠 DATA STRUCTURE
+Start simple:
+
+projects.json
+[
+  {
+    "title": "Mini Market Simulation",
+    "category": "Games",
+    "status": "in progress",
+    "github": "...",
+    "description": "...",
+    "image": "..."
+  }
+]
+tasks.json
+[
+  {
+    "title": "Finish Python basics",
+    "status": "in progress",
+    "priority": "high"
+  }
+]
+context.md
+Plain text file:
+
+your goals
+
+roadmap
+
+ideas
+
+constraints
+
+⚙️ TECH STACK (FINAL)
+Frontend
+Next.js (Vercel)
+
+Backend
+FastAPI
+
+Storage
+JSON → later database
+
+AI
+API call via backend
+
+🔐 SECURITY (keep it simple)
+For now:
+
+/dashboard protected by:
+
+password OR
+
+simple token
+
+Later upgrade if needed.
+
+🚀 BUILD ORDER (CRITICAL)
+Phase 1 (Week 1–2)
+frontend pages (static)
+
+deploy on Vercel
+
+Phase 2
+backend (FastAPI)
+
+simple API endpoints
+
+Phase 3
+connect frontend ↔ backend
+
+Phase 4
+task system
+
+project manager
+
+Phase 5
+AI chat
+
+context.md integration
+
+🔥 FINAL RESULT (END OF 2026)
+You will have:
+
+Public:
+clean portfolio
+
+all projects organized
+
+easy to explore
+
+Private:
+full task system
+
+roadmap manager
+
+AI assistant
+
+project manager
+
+Skills gained:
+frontend
+
+backend
+
+APIs
+
+AI integration
+
+system design
+
+real software engineering thinking
+
+🧭 MOST IMPORTANT RULE
+This is NOT just a website.
+
+This is:
+
+The system that runs your entire learning journey
+
+
+This is a bit more context
+
+# 🧠 USER CONTEXT — MASTER FILE (2026)
+
+## 👤 About Me
+- Student (Year 8 in 2026)
+- Interested in:
+  - Robotics engineering
+  - AI / Machine Learning
+  - Software development
+  - CAD / 3D design
+- I like both:
+  - building real systems
+  - experimenting with ideas
+
+---
+
+## 🎯 Main Goals (2026)
+
+1. Learn Python properly (reduce reliance on AI)
+2. Understand machine learning beyond just object detection
+3. Improve computer vision (counting, tracking, real systems)
+4. Build a full portfolio website with all projects
+5. Create an AI-powered task + roadmap system
+6. Learn backend + API development
+7. Improve CAD skills (Fusion 360)
+8. Explore hardware, microcontrollers, and PCB
+9. Organize all work into one clean system
+10. Finish more projects instead of starting too many
+
+---
+
+## 🧭 Learning Priorities (ORDER)
+
+1. Python fundamentals
+2. Git + project structure
+3. General machine learning
+4. Computer vision (advanced)
+5. Backend + APIs
+6. Deep learning (PyTorch)
+7. CAD (Fusion 360)
+8. Hardware / PCB
+9. Game development (secondary)
+10. Monetization (last priority)
+
+---
+
+## ⚠️ Constraints / Weaknesses
+
+- I rely too much on AI for coding
+- I start many projects but don’t finish them
+- My coding fundamentals are weak
+- CAD is currently a weakness
+- I sometimes lose structure and direction
+
+---
+
+## 💪 Strengths
+
+- Strong interest in robotics + AI
+- Experience with YOLO and vision projects
+- Comfortable experimenting and trying ideas
+- Have many project ideas already
+- Willing to learn difficult concepts
+
+---
+
+## 🧠 Learning Style
+
+- Learn best by building projects
+- Prefer a mix of:
+  - tutorials
+  - hands-on work
+- Need structure to stay consistent
+- Need clear tasks to avoid getting lost
+
+---
+
+## 📆 Time Availability
+
+- ~20 minutes to 2 hours per day (self work)
+- FTC time is separate and NOT included
+- This system is only for personal projects
+
+---
+
+## 🚫 Important Rules
+
+- Do NOT include FTC tasks in plans
+- Focus only on self-projects
+- Do not overload with too many tasks
+- Always prioritize finishing over starting new things
+- Keep roadmap realistic but challenging
+
+---
+
+## 🧩 Current Projects
+
+### 🤖 Vision / ML
+- Visual Recognition Projects (main collection)
+- Australian Bills Detection (unfinished)
+- Weed / Plant Segmentation
+- Rock Paper Scissors Detection
+- Pothole Detection
+- Human Detection Alarm
+
+---
+
+### 🎮 Games
+- Mini Market Simulation (needs backend)
+- Dodge Master
+- KartBlitz (unfinished)
+- Blob Game
+
+---
+
+### 🌐 Web / Tools
+- Connections Web App
+- AI Quiz Hub (unfinished)
+- HTML Utility Hub (word counter etc.)
+- Flashcard Maker
+- Class Timer
+- Popup Tool
+
+---
+
+### 🧪 Other
+- F1 Machine Learning Model (paused)
+
+---
+
+## 🏗️ Portfolio System Goals
+
+I am building a website that includes:
+
+### Public:
+- Portfolio (all projects)
+- Categories:
+  - ML / Vision
+  - Games
+  - CAD
+  - Backend / Tools
+
+### Private (/dashboard):
+- Task manager
+- Roadmap (2026)
+- AI chat assistant
+- context.md editor
+- Project manager (no manual HTML editing)
+
+---
+
+## 🤖 AI Assistant Role
+
+The AI should:
+- Help plan tasks
+- Break down projects
+- Improve roadmap
+- Suggest next steps
+- Organize ideas
+- Reduce clutter
+- Help me stay consistent
+
+The AI should NOT:
+- Overcomplicate things
+- Add unnecessary tasks
+- Ignore my priorities
+- Include FTC-related work
+
+---
+
+## 📌 Task System Structure
+
+Tasks should include:
+- title
+- description
+- category (Python, ML, Vision, CAD, Games, Backend)
+- priority
+- status:
+  - idea
+  - planned
+  - in progress
+  - done
+
+---
+
+## 🗺️ Roadmap Structure
+
+Months:
+- May → December 2026
+
+Each month should:
+- have clear focus
+- include learning + building
+- include at least one finished outcome
+
+---
+
+## 🧠 Project Philosophy
+
+- Fewer, better projects > many unfinished ones
+- Every project must have:
+  - README
+  - explanation
+  - screenshots or demo
+- Projects should connect to portfolio
+- Projects should improve real skills
+
+---
+
+## 🎮 Game Development Rules
+
+- Only work on ONE game at a time
+- Improve existing games before starting new ones
+- Use games to learn:
+  - logic
+  - UI
+  - backend
+- Do not let games take over main priorities
+
+---
+
+## 💰 Monetization (LOW PRIORITY)
+
+- AI tools could be monetized later
+- Not a focus in 2026
+- Only consider after skills + portfolio are strong
+
+---
+
+## 🔄 How AI Should Use This File
+
+When responding, the AI should:
+- consider my goals
+- consider my current skill level
+- prioritize learning fundamentals
+- avoid overwhelming me
+- give structured, actionable steps
+
+---
+
+## 🧭 Current Focus (UPDATE THIS OFTEN)
+
+(Currently working on:)
+- [fill this in]
+
+(Current main goal:)
+- [fill this in]
+
+(Current blockers:)
+- [fill this in]
+
+---
+These are some of my road maps: 
+
+🧭 2026 Roadmap 
+
+ 
+
+ 
+
+🏗️ [May] Portfolio Shell & Python Foundations 
+
+Title: 🏗️ [May] Portfolio Shell & Python Foundations 
+
+Description: 
+
+Learn: Python basics from scratch; Git basics (beyond pushing). 
+
+Build: Master portfolio skeleton (Home, About, Projects, ML, CAD, Games). 
+
+AI System: Set up context.md system for the AI assistant. 
+
+Game: Choose 1 game (e.g., KartBlitz) to clean up and fix README. 
+
+Due Date: May 31, 2026 
+
+ 
+
+ 
+
+🐍 [June] Python Core & Utility Tools 
+
+Title: 🐍 [June] Python Core & Utility Tools 
+
+Description: 
+
+Learn: Variables, loops, functions, lists/dicts, classes, and debugging. 
+
+Build: 2 small Python tools from scratch (one utility, one mini-project). 
+
+Game: Start a small prototype focused on a simple gameplay loop. 
+
+Due Date: June 30, 2026 
+
+ 
+
+ 
+
+🧹 [July] Git Workflow & Clean Code 
+
+Title: 🧹 [July] Git Workflow & Clean Code 
+
+Description: 
+
+Learn: Branches, merges, commit habits, and virtual environments. 
+
+Build: Reorganize old repos; split messy code into clear folders. 
+
+Game: Rebuild a core mechanic of an existing game (e.g., Mini Market or Dodge Master) using better structure. 
+
+Due Date: July 31, 2026 
+
+ 
+
+ 
+
+📊 [August] General ML & Data Experiments 
+
+Title: 📊 [August] General ML & Data Experiments 
+
+Description: 
+
+Learn: Train/test splits, regression, clustering, and evaluation metrics (Confusion Matrix). 
+
+Build: One classification project and one regression project. 
+
+Game: Add one specific functional feature to an existing game. 
+
+Due Date: August 31, 2026 
+
+ 
+
+ 
+
+👁️ [September] CV Depth & Object Tracking 
+
+Title: 👁️ [Sept] CV Depth & Object Tracking 
+
+Description: 
+
+Learn: OpenCV basics, preprocessing, edge detection, and tracking logic. 
+
+Build: Tracking/counting project (e.g., trash detection or bill counting) and upgrade an old YOLO repo. 
+
+Game: Implement a visual UI feature (leaderboard or inventory). 
+
+Due Date: September 30, 2026 
+
+ 
+
+ 
+
+🧠 [October] Deep Learning & PyTorch 
+
+Title: 🧠 [Oct] Deep Learning & PyTorch 
+
+Description: 
+
+Learn: Tensors, training loops, loss functions, and neural network structure. 
+
+Build: One small PyTorch project; experiment with training setups. 
+
+Game: Focus on polish, performance, or a progression system. 
+
+Due Date: October 31, 2026 
+
+ 
+
+ 
+
+🛠️ [November] Backend & AI API Hub 
+
+Title: 🛠️ [Nov] Backend & AI API Hub 
+
+Description: 
+
+Learn: APIs, Request/Response flow, and simple databases. 
+
+Build: Student Hub backend; AI project assistant that reads context.md. 
+
+Game: Final polish of a single game or pause to finish the Hub. 
+
+Due Date: November 30, 2026 
+
+ 
+
+ 
+
+📐 [December] CAD, Hardware & Portfolio Completion 
+
+Title: 📐 [Dec] CAD, Hardware & Portfolio Completion 
+
+Description: 
+
+Learn: Fusion 360 (sketching, assemblies, tolerances) and microcontrollers. 
+
+Build: One useful 3D printable part and a hardware-inspired concept. 
+
+Portfolio: Add demo videos/images to all repos; final website review. 
+
+Due Date: December 31, 2026 
+
+ 
+
+ 
+
+🔄 2026 Maintenance Checklist (Recurring) 
+
+Title: 🔄 Monthly Check-In 
+
+Description: 
+
+Did I finish 1 learning milestone? 
+
+Did I finish 1 project feature? 
+
+Did I polish 1 repo? 
+
+Are there only 3 active things on my plate? (Move rest to backlog). 
+
+Due Date: Last day of every month 
+
+ 
+
+ 
+
+If you want, I can next: 
+
+turn this into a Notion AI database version (way more powerful than Google Tasks) 
+
+or convert it into a weekly FTC + ML schedule so it’s actually executable day-by-day 
+
+ This is a solid framework, but "learn Python" is a bit like saying "learn to cook"—it’s too broad to execute daily. To make Document 2 truly actionable for OneNote, we need to break these down into "Day 1–7" style sprints with specific project names and technical requirements. 
+
+Here is the upgraded, hyper-specific version of your detailed task plan. 
+
+ 
+ 
+
+🎯 DOCUMENT 2: THE 2026 MASTER EXECUTION PLAN 
+
+🔵 MAY — “THE ARCHITECT” (System Building) 
+
+Main Goal: Build the "Command Center" where all future work will live. 
+
+🛠 Build Tasks 
+
+Portfolio Website (The Shell): 
+
+Setup a clean folder structure: /assets, /css, /js, /projects. 
+
+Page 1: A "Terminal-style" landing page showing your current "System Status" (e.g., Current Project: KartBlitz). 
+
+Page 2: A dedicated "Hardware Lab" section for 3D prints and robotics. 
+
+AI Task Hub (The Core): 
+
+Frontend: Simple HTML input fields for "Task Name," "Priority," and "Category." 
+
+Storage: Use localStorage so your tasks stay there even if you refresh. 
+
+Logic: A "Filter" button to see only "Robotics" or "Coding" tasks. 
+
+🧠 Learning Sprint 
+
+Week 1: HTML Boilerplate + Flexbox for layout. 
+
+Week 2: JavaScript fetch() basics (for later API use). 
+
+Week 3: CSS Variables (to easily switch between "Dark Mode" and "Racing Mode"). 
+
+ 
+ 
+
+🟢 JUNE — “THE LOGICIAN” (Python Core) 
+
+Main Goal: Stop "Vibe-Coding" and start architecting. 
+
+🛠 Build Tasks (Choose 2) 
+
+F1 Telemetry Parser: A CLI tool where you input a lap time or sector data, and it calculates the % difference to a "Target Lap." 
+
+PC Part Inventory: A script that reads a .json file of your current hardware and prints a "Compatibility Report." 
+
+Study Timer: A Pomodoro timer that logs your focus sessions to a .txt file automatically. 
+
+🧠 Specific Skills 
+
+Handling Dictionariies and Lists (crucial for ML later). 
+
+Error Handling: Using try/except so your code doesn't crash when you type something wrong. 
+
+ 
+ 
+
+🟡 JULY — “THE CLEANER” (Git & Polish) 
+
+Main Goal: Make your code look like a professional wrote it. 
+
+🛠 Build Tasks 
+
+The "Grand Cleanup": 
+
+Take KartBlitz (or a similar JS project) and move all the physics logic into a separate physics.js file. 
+
+Create a proper README.md with: "How to Run," "Controls," and "Known Issues." 
+
+Git Workflow: 
+
+Start using Branches. Never code on the main branch. Create a feature-ui branch, finish it, and then merge. 
+
+ 
+ 
+
+🟠 AUGUST — “THE ANALYST” (Non-Vision ML) 
+
+Main Goal: Predicting numbers and categories. 
+
+🛠 Build Tasks 
+
+Project "Podium Predictor": Use a CSV of race data to predict if a driver will finish in the Top 10 based on grid position and tire choice. 
+
+Benchmark Classifier: A model that takes GPU specs (VRAM, Clock Speed) and predicts if it's "Entry," "Mid," or "High" tier. 
+
+🧠 Learning 
+
+Scikit-Learn: Learn train_test_split. 
+
+Metrics: Understand why Accuracy isn't everything (Precision vs. Recall). 
+
+ 
+ 
+
+🔴 SEPTEMBER — “THE OBSERVER” (OpenCV Upgrade) 
+
+Main Goal: Moving beyond just "training" a YOLO model to actually using the data. 
+
+🛠 Build Tasks 
+
+OpenCV Filters: Build a script that detects a specific color (like "Racing Red") and draws a bounding box around it in real-time. 
+
+The Tracking Layer: 
+
+Upgrade a YOLO script to include a Counter. If an object crosses a specific y-coordinate on the screen, increment a variable. 
+
+Example: Count how many times a ball passes through a hoop or a car passes a line. 
+
+ 
+ 
+
+🟣 OCTOBER — “THE NEURAL NET” (Deep Learning) 
+
+Main Goal: Understanding the "Brain" of the AI. 
+
+🛠 Build Tasks 
+
+Handwritten Digit Recognizer: The "Hello World" of Deep Learning using MNIST. 
+
+PyTorch Tensors: Rewrite a simple math calculation using only Tensors. 
+
+Hyperparameter Tuning: Run the same model 3 times with different "Learning Rates" and graph the results. 
+
+ 
+ 
+
+🔵 NOVEMBER — “THE INTEGRATOR” (Backend) 
+
+Main Goal: Connecting your AI Hub to a real "Brain." 
+
+🛠 Build Tasks 
+
+The FastAPI Server: 
+
+Build a local API that your Portfolio can "talk" to. 
+
+Create a /tasks endpoint that lets you add tasks from your website and saves them to a permanent database (SQLite). 
+
+Context.md Integration: 
+
+Write a script that reads your context.md (which summarizes your progress) and sends it to an LLM API to get a "Weekly Goal" generated for you. 
+
+ 
+ 
+
+⚫ DECEMBER — “THE ENGINEER” (CAD & Hardware) 
+
+Main Goal: Physical manifestation of your code. 
+
+🛠 Build Tasks 
+
+The Speaker Project: * Design the Hex-Shell in Fusion 360. 
+
+Constraint: Ensure the internal volume matches the speaker driver specs for better bass. 
+
+Laser Cutting: Design the flat-panel housing. Use "Finger Joints" to snap the wood/acrylic together without complex curves. 
+
+PCB/Microcontroller: 
+
+Wire up an ESP32 or Arduino to control the speaker's volume or RGB lighting via code you wrote in June. 
+
+ 
+ 
+
+🛑 THE "ONE-IN, ONE-OUT" RULE 
+
+Before adding a new feature to Document 2, you must mark one task in the current month as DONE. 
+
+Next Step? 
+
+I can give you the exact file structure for your May Portfolio project, or we can write the first 10 lines of Python for your June CLI tool. Which one should we tackle first? 
+
+ Read memory
+
+Let me ask a few quick questions before I finalize the plan. 
+
+Analyzing your answers...
+
+Here is your full plan:
+
+---
+
+## Plan: Personal Operating System — Portfolio + Dashboard
+
+**TL;DR:** Build a Next.js public portfolio + private `/dashboard` backed by a FastAPI server. Data lives in JSON files on the server. The admin system (project/task forms) writes to those files, so you never touch HTML again. AI chat is designed now and wired in Phase 5. Deployed: Next.js on Vercel, FastAPI on Railway.
+
+---
+
+### Phase 1 — Frontend Skeleton (Week 1–2)
+
+**Goal:** All public pages exist as static UI. No backend needed yet. Deploy to Vercel.
+
+1. Scaffold Next.js 14 app with App Router: `npx create-next-app@latest portfolio --typescript --tailwind --app`
+2. Create the global layout (`app/layout.tsx`) — navbar with links: Home, Projects, AI/ML, Games, CAD, Backend, Notes, Contact
+3. Build **Home page** (`app/page.tsx`) — intro section, interests, featured projects (hardcoded for now), quick links
+4. Build **Projects page** (`app/projects/page.tsx`) — project cards grid, filter buttons (ML/Vision, Games, CAD, Backend, Tools), search bar — all driven by a local `data/projects.json` file read at build time
+5. Build **AI/ML page** (`app/ai/page.tsx`) — filtered view of projects where `category === "ML"`, same card component
+6. Build **Games page** (`app/games/page.tsx`) — same filtered view, screenshot + play link emphasis
+7. Build **CAD page** (`app/cad/page.tsx`) — gallery layout, render images, placeholder STL download
+8. Build **Backend/Tools page** (`app/backend/page.tsx`) — filtered view
+9. Build **Notes page** (`app/notes/page.tsx`) — simple list of markdown files read from `data/notes/`
+10. Build **Contact page** (`app/contact/page.tsx`) — email, GitHub, LinkedIn links
+11. Create `data/projects.json` and `data/tasks.json` with your real data (use the schema below)
+12. Deploy to Vercel — connect GitHub repo, set root as project folder
+
+*All filter/search logic runs client-side in Phase 1. No API calls yet.*
+
+---
+
+### Phase 2 — FastAPI Backend (parallel with Phase 1 tail)
+
+**Goal:** A working REST API that reads/writes JSON files. Runs locally and on Railway.
+
+13. Create `/backend` folder: `fastapi`, `uvicorn`, `python-dotenv` in `requirements.txt`
+14. Create `main.py` with these endpoints:
+
+| Method | Route | Purpose |
+|--------|-------|---------|
+| GET | `/projects` | return all projects |
+| POST | `/projects` | add project |
+| PUT | `/projects/{id}` | edit project |
+| DELETE | `/projects/{id}` | delete project |
+| GET | `/tasks` | return all tasks |
+| POST | `/tasks` | add task |
+| PUT | `/tasks/{id}` | edit/update task |
+| DELETE | `/tasks/{id}` | delete task |
+| GET | `/context` | return context.md text |
+| PUT | `/context` | save new context.md text |
+| POST | `/auth/login` | check password, return session token |
+| POST | `/ai/chat` | proxy AI request (Phase 5) |
+
+15. Auth middleware: every mutating route (`POST/PUT/DELETE`) checks `Authorization: Bearer <token>` header. Token = SHA-256 hash of password stored in `.env` as `DASHBOARD_PASSWORD`. No user database needed.
+16. JSON read/write: simple helper `load_json(path)` / `save_json(path, data)` — data stored in `/backend/data/projects.json` and `/backend/data/tasks.json`
+17. CORS: allow only your Vercel domain + localhost
+18. Deploy to Railway: connect GitHub, set start command `uvicorn main:app --host 0.0.0.0 --port $PORT`, add `DASHBOARD_PASSWORD` env var
+
+---
+
+### Phase 3 — Connect Frontend ↔ Backend
+
+**Goal:** Public portfolio now reads live data from API. Filter/search still client-side.
+
+19. Add `NEXT_PUBLIC_API_URL` env var in Vercel pointing to your Railway URL
+20. Update `app/projects/page.tsx` to `fetch()` from `/projects` at request time (`async` server component)
+21. Same for AI/ML, Games, CAD, Backend pages — they all call the same endpoint and filter by `category`
+22. Add a `lib/api.ts` client helper that wraps `fetch` and attaches the auth token for dashboard calls
+
+---
+
+### Phase 4 — Private Dashboard
+
+**Goal:** Full task manager, roadmap, and project manager at `/dashboard`. Protected by password.
+
+24. Create `app/dashboard/layout.tsx` — checks for auth cookie; if missing, redirects to `/dashboard/login`
+25. **Login page** (`app/dashboard/login/page.tsx`) — password form → `POST /auth/login` → store token in `httpOnly` cookie via Next.js route handler
+26. **Dashboard home** (`app/dashboard/page.tsx`) — today's tasks (filter `status !== "done"`), current focus, quick-add task form
+27. **Task Manager** (`app/dashboard/tasks/page.tsx`):
+    - List all tasks with status badges
+    - Inline status change (idea → planned → in progress → done)
+    - Priority indicator (high/medium/low)
+    - Category filter (Python, ML, Vision, CAD, Games, Backend)
+    - Add/edit/delete via API calls to `/tasks`
+28. **Roadmap page** (`app/dashboard/roadmap/page.tsx`):
+    - Month columns: May → December 2026
+    - Tasks grouped by `month` field
+    - Progress bar per month (done / total)
+    - Drag task to different month (optional — can skip to Phase 5)
+29. **Project Manager** (`app/dashboard/projects/page.tsx`):
+    - List all projects
+    - "Add Project" button → form modal: title, description, category (dropdown), GitHub link, demo link, image URL, status
+    - Edit/delete existing projects
+    - All changes hit the API → JSON file updates → public portfolio reflects changes immediately
+30. **context.md Editor** (`app/dashboard/context/page.tsx`):
+    - Textarea loaded from `GET /context`
+    - Save button → `PUT /context`
+    - Show last-saved timestamp
+
+---
+
+### Phase 5 — AI Chat Panel
+
+**Goal:** AI reads your tasks + context.md and gives suggestions. Provider-agnostic by design.
+
+31. Add AI provider config to `.env`: `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`
+32. `POST /ai/chat` endpoint in FastAPI:
+    - Loads `tasks.json` + `context.md` as system context
+    - Sends user message + context to AI provider
+    - Returns assistant reply
+    - Provider is swappable (OpenAI / Gemini / Groq) via env var — implement an adapter pattern
+33. **AI Chat Panel** (`app/dashboard/ai/page.tsx`):
+    - Chat UI: message history, input box, send button
+    - Suggested prompts: "Break this into tasks", "Improve my roadmap", "What should I do next", "Organize my projects"
+    - Responses can include structured task suggestions (JSON block) that you can one-click add to tasks
+
+---
+
+### Data Schemas
+
+**`projects.json` item:**
+```
+id, title, description, category, status, github, demo, image, techs[]
+```
+
+**`tasks.json` item:**
+```
+id, title, status, priority, category, month, notes
+```
+
+---
+
+### Relevant Files
+
+- `portfolio/app/` — all Next.js pages
+- `portfolio/lib/api.ts` — auth-aware fetch wrapper for dashboard
+- `portfolio/data/projects.json` — initial seed data (Phase 1)
+- `backend/main.py` — all FastAPI routes
+- `backend/data/projects.json` — live data (backend owns this)
+- `backend/.env` — `DASHBOARD_PASSWORD`, `AI_API_KEY`
+- `backend/requirements.txt` — `fastapi`, `uvicorn`, `python-dotenv`
+
+---
+
+### Verification
+
+1. Phase 1: `npm run dev` → all 8 public pages load, project cards render from local JSON, filters work
+2. Phase 2: `uvicorn main:app --reload` → test all endpoints with Postman or `curl`; unauthenticated `POST /projects` returns 401
+3. Phase 3: Deploy preview on Vercel → projects page shows data from Railway API
+4. Phase 4: Visit `/dashboard` without login → redirected to `/dashboard/login`; after login → add a project → visit public `/projects` → new project appears
+5. Phase 5: Send "What should I do next?" in AI panel → response references actual tasks from `tasks.json`
+
+---
+
+### Decisions
+
+- **Auth:** Hardcoded password in `.env`, token = hashed password, stored in `httpOnly` cookie — no user DB needed
+- **Storage:** JSON files for all phases described; migration to Supabase/SQLite is a drop-in swap of the FastAPI data layer only
+- **AI provider:** Abstracted behind `/ai/chat` — wire in whichever provider you pick later by changing env vars
+- **No HTML editing:** All project/task changes go through forms → API → JSON. The frontend always reads from the API.
+- **Out of scope for now:** STL file uploads, multi-user auth, markdown-rendered notes editor (plain textarea is fine to start)
+
+---
+
+**Ready to start with Phase 1?** Switch to Agent mode and it will scaffold the Next.js project and build all 8 public pages.
