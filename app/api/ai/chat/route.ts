@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildPortfolioContextSummary } from "@/lib/portfolio-context";
+import { buildRepositoryContextSummary } from "@/lib/repo-context";
 import { getAuthHeaderFromCookie, toBackendUrl } from "@/app/api/_lib/backend";
 
 const LM_STUDIO_URL =
@@ -56,9 +57,17 @@ export async function POST(req: Request) {
     projects,
     tasks,
   });
+  const repositoryContext = await buildRepositoryContextSummary({
+    rootDir: process.cwd(),
+    maxFiles: 20,
+    maxCharsPerFile: 12000,
+  });
 
   const messages: ChatMessage[] = [
-    { role: "system", content: `${SYSTEM_PROMPT}\n\n${portfolioContext}` },
+    {
+      role: "system",
+      content: `${SYSTEM_PROMPT}\n\n${portfolioContext}\n\n${repositoryContext}`,
+    },
     ...history,
     { role: "user", content: body.message.trim() },
   ];
