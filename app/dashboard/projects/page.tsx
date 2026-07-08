@@ -7,8 +7,10 @@ import {
   addProject,
   deleteProject,
   getProjects,
+  getSiteSettings,
   updateProject,
 } from "@/lib/api";
+import { flattenTabs } from "@/lib/categories";
 
 function progressLabel(pct: number): string {
   if (pct === 0) return "Not started";
@@ -51,6 +53,17 @@ const DEFAULT_LINKS: ProjectLink[] = [
   { label: "Demo", url: "" },
 ];
 
+function parseSubcategoryPath(value: string): string[] {
+  return value
+    .split(">")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function stringifySubcategoryPath(path: string[] | undefined): string {
+  return (path ?? []).join(" > ");
+}
+
 export default function DashboardProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,11 +74,19 @@ export default function DashboardProjectsPage() {
   const [description, setDescription] = useState("");
   const [hiddenNotes, setHiddenNotes] = useState("");
   const [category, setCategory] = useState("Games");
+  const [subcategoryPathInput, setSubcategoryPathInput] = useState("");
   const [status, setStatus] = useState("planned");
   const [links, setLinks] = useState<ProjectLink[]>(DEFAULT_LINKS);
   const [techs, setTechs] = useState("");
   const [progress, setProgress] = useState(0);
   const [imagePreview, setImagePreview] = useState("");
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([
+    "Games",
+    "ML / Vision",
+    "CAD",
+    "Backend",
+    "Tools",
+  ]);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   function updateLink(idx: number, field: keyof ProjectLink, value: string) {
@@ -83,8 +104,15 @@ export default function DashboardProjectsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getProjects();
+        const [data, settings] = await Promise.all([getProjects(), getSiteSettings()]);
         setProjects(data);
+        const labels = Array.from(new Set(flattenTabs(settings.tabs).map((node) => node.label)));
+        if (labels.length > 0) {
+          setCategoryOptions(labels);
+          if (!labels.includes(category)) {
+            setCategory(labels[0]);
+          }
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load projects";
         setError(msg);
@@ -106,6 +134,7 @@ export default function DashboardProjectsPage() {
         description: description.trim(),
         hiddenNotes: hiddenNotes.trim(),
         category,
+        subcategoryPath: parseSubcategoryPath(subcategoryPathInput),
         status,
         links: links.filter((l) => l.url.trim()),
         image: imagePreview,
@@ -119,6 +148,7 @@ export default function DashboardProjectsPage() {
       setTitle("");
       setDescription("");
       setHiddenNotes("");
+      setSubcategoryPathInput("");
       setLinks(DEFAULT_LINKS);
       setTechs("");
       setProgress(0);
@@ -206,11 +236,9 @@ export default function DashboardProjectsPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-300"
               >
-                <option value="Games">Games</option>
-                <option value="ML / Vision">ML / Vision</option>
-                <option value="CAD">CAD</option>
-                <option value="Backend">Backend</option>
-                <option value="Tools">Tools</option>
+                {categoryOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
               </select>
               <>
                 <input
@@ -227,6 +255,13 @@ export default function DashboardProjectsPage() {
                 </datalist>
               </>
             </div>
+
+            <input
+              value={subcategoryPathInput}
+              onChange={(e) => setSubcategoryPathInput(e.target.value)}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
+              placeholder="Subcategory path (optional): AI / ML > ML > Object detection models"
+            />
 
             {/* Links */}
             <div className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 space-y-2">
@@ -399,6 +434,11 @@ export default function DashboardProjectsPage() {
                     <div>
                       <p className="text-white font-semibold text-sm">{project.title}</p>
                       <p className="text-zinc-500 text-xs mt-0.5">{project.category}</p>
+                      {(project.subcategoryPath ?? []).length > 0 ? (
+                        <p className="text-zinc-600 text-xs mt-0.5">
+                          {(project.subcategoryPath ?? []).join(" > ")}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-2">
                       <>
@@ -425,6 +465,29 @@ export default function DashboardProjectsPage() {
                         Delete
                       </button>
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <span className="text-xs text-zinc-400">Subcategory path</span>
+                    <input
+                      value={stringifySubcategoryPath(project.subcategoryPath)}
+                      onChange={(e) =>
+                        setProjects((prev) =>
+                          prev.map((p) =>
+                            p.id === project.id
+                              ? { ...p, subcategoryPath: parseSubcategoryPath(e.target.value) }
+                              : p
+                          )
+                        )
+                      }
+                      onBlur={(e) =>
+                        void onFieldUpdate(project.id, {
+                          subcategoryPath: parseSubcategoryPath(e.target.value),
+                        })
+                      }
+                      className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
+                      placeholder="AI / ML > ML > Object detection models"
+                    />
                   </div>
 
                   {/* Progress slider */}

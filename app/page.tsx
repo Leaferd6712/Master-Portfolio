@@ -61,7 +61,9 @@ export default function HomePage() {
       }
 
       if (settingsResult.status === "fulfilled") {
-        const interestTabs = settingsResult.value.tabs.filter((tab) => tab.showInInterests);
+        const interestTabs = settingsResult.value.tabs.filter(
+          (tab) => tab.showInInterests && tab.showInNav
+        );
         setInterests(interestTabs.length ? interestTabs : fallbackInterests);
       } else {
         setInterests(fallbackInterests);

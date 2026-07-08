@@ -36,3 +36,25 @@ export function projectMatchesCategory(project: Project, category: string): bool
 export function publicProjects(projects: Project[]): Project[] {
   return projects.filter((project) => project.visibility !== "draft");
 }
+
+function collectDescendantLabels(tab: SiteTab): string[] {
+  const labels = [tab.label];
+  for (const child of tab.children ?? []) {
+    labels.push(...collectDescendantLabels(child));
+  }
+  return labels;
+}
+
+export function buildDescendantLabelMap(tabs: SiteTab[]): Record<string, string[]> {
+  const map: Record<string, string[]> = {};
+
+  function visit(nodes: SiteTab[]) {
+    for (const node of nodes) {
+      map[node.label] = Array.from(new Set(collectDescendantLabels(node)));
+      visit(node.children ?? []);
+    }
+  }
+
+  visit(tabs);
+  return map;
+}

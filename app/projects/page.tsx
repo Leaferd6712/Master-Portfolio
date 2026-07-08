@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { getProjects, getSiteSettings } from "@/lib/api";
-import { flattenTabs, projectMatchesCategory } from "@/lib/categories";
+import { buildDescendantLabelMap, flattenTabs } from "@/lib/categories";
 
 export default function ProjectsPage() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [projects, setProjects] = useState<Project[]>([]);
+  const [descendantMap, setDescendantMap] = useState<Record<string, string[]>>({});
   const [categories, setCategories] = useState([
     { label: "ML / Vision", depth: 0 },
     { label: "Games", depth: 0 },
@@ -33,6 +36,12 @@ export default function ProjectsPage() {
             .map((node) => ({ label: node.label, depth: node.depth }))
         : [];
 
+      if (settingsResult.status === "fulfilled") {
+        setDescendantMap(buildDescendantLabelMap(settingsResult.value.tabs));
+      } else {
+        setDescendantMap({});
+      }
+
       const projectCategories = Array.from(
         new Set(data.map((project) => project.category).filter(Boolean))
       ).map((label) => ({ label, depth: 0 }));
@@ -47,16 +56,25 @@ export default function ProjectsPage() {
     void load();
   }, []);
 
+  useEffect(() => {
+    const categoryFromQuery = searchParams.get("category");
+    if (categoryFromQuery?.trim()) {
+      setActiveCategory(categoryFromQuery.trim());
+    }
+  }, [searchParams]);
+
   const filtered = useMemo(() => {
     return projects.filter((p) => {
       // Filter out draft projects
       if (p.visibility === "draft") return false;
       
       // Simple category matching (supports both direct category and subcategoryPath)
+      const categoryScope = descendantMap[activeCategory] ?? [activeCategory];
+      const path = p.subcategoryPath ?? [];
       const matchesCategory =
         activeCategory === "All" ||
-        p.category === activeCategory ||
-        (p.subcategoryPath && p.subcategoryPath.includes(activeCategory));
+        categoryScope.includes(p.category) ||
+        path.some((label) => categoryScope.includes(label));
       
       const q = search.toLowerCase();
       const matchesSearch =
