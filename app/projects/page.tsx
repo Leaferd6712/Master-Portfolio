@@ -43,8 +43,15 @@ export default function ProjectsPage() {
 
   const filtered = useMemo(() => {
     return projects.filter((p) => {
+      // Filter out draft projects
+      if (p.visibility === "draft") return false;
+      
+      // Simple category matching (supports both direct category and subcategoryPath)
       const matchesCategory =
-        activeCategory === "All" || projectMatchesCategory(p, activeCategory);
+        activeCategory === "All" ||
+        p.category === activeCategory ||
+        (p.subcategoryPath && p.subcategoryPath.includes(activeCategory));
+      
       const q = search.toLowerCase();
       const matchesSearch =
         p.title.toLowerCase().includes(q) ||

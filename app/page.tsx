@@ -52,9 +52,11 @@ export default function HomePage() {
           getProjects(),
           getSiteSettings(),
         ]);
-        const visibleProjects = publicProjects(projects);
-        const markedFeatured = visibleProjects.filter((project) => project.featured);
-        setFeatured((markedFeatured.length ? markedFeatured : visibleProjects).slice(0, 3));
+        // Filter out draft projects if visibility field exists
+        const visibleProjects = projects.filter((p) => p.visibility !== "draft");
+        // Prefer featured projects, otherwise show first 3
+        const markedFeatured = visibleProjects.filter((p) => p.featured === true);
+        setFeatured((markedFeatured.length > 0 ? markedFeatured : visibleProjects).slice(0, 3));
 
         const interestTabs = settings.tabs.filter((tab) => tab.showInInterests);
         setInterests(interestTabs.length ? interestTabs : fallbackInterests);
