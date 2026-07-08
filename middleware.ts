@@ -9,6 +9,24 @@ const BACKEND_API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://localhost:8000";
 
+async function expectedDashboardToken(): Promise<string | null> {
+  const password = process.env.DASHBOARD_PASSWORD;
+  if (!password) return null;
+
+  const bytes = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function hasValidDashboardToken(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  const expected = await expectedDashboardToken();
+  if (!expected) return true;
+  return token === expected;
+}
+
 async function isMaintenanceEnabled(): Promise<boolean> {
   try {
     const res = await fetch(`${BACKEND_API_URL}/maintenance`, {
@@ -35,11 +53,13 @@ export async function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    if (!token) {
+    if (!(await hasValidDashboardToken(token))) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = DASHBOARD_LOGIN;
       loginUrl.searchParams.set("next", pathname);
-      return NextResponse.redirect(loginUrl);
+      const redirect = NextResponse.redirect(loginUrl);
+      redirect.cookies.delete("token");
+      return redirect;
     }
 
     return NextResponse.next();

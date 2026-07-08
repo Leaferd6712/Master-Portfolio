@@ -12,8 +12,10 @@ import {
   Project,
   reorderTasks,
   Task,
+  type TimeframeOption,
   updateTask,
 } from "@/lib/api";
+import { TIMEFRAME_OPTIONS } from "@/lib/site-config";
 import {
   closestCenter,
   DndContext,
@@ -107,23 +109,19 @@ function SortableTaskCard({
   task,
   onMoveTask,
   onDeleteTask,
-  onUpdateDates,
+  onUpdateTimeframe,
 }: {
   task: Task;
   onMoveTask: (taskId: string, status: Task["status"]) => void;
   onDeleteTask: (taskId: string) => void;
-  onUpdateDates: (taskId: string, startDate: string, endDate: string) => Promise<void>;
+  onUpdateTimeframe: (taskId: string, timeframe: TimeframeOption) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id });
 
-  const [editingDates, setEditingDates] = useState(false);
-  const [draftStart, setDraftStart] = useState(task.startDate);
-  const [draftEnd, setDraftEnd] = useState(task.endDate);
-  const [savingDates, setSavingDates] = useState(false);
-
-  const today = new Date().toISOString().split("T")[0];
-  const isOverdue = task.endDate && task.endDate < today && task.status !== "done";
+  const [editingTimeframe, setEditingTimeframe] = useState(false);
+  const [draftTimeframe, setDraftTimeframe] = useState<TimeframeOption>(task.timeframe ?? "2 weeks");
+  const [savingTimeframe, setSavingTimeframe] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -131,17 +129,16 @@ function SortableTaskCard({
     opacity: isDragging ? 0.6 : 1,
   };
 
-  async function handleSaveDates() {
-    setSavingDates(true);
-    await onUpdateDates(task.id, draftStart, draftEnd);
-    setSavingDates(false);
-    setEditingDates(false);
+  async function handleSaveTimeframe() {
+    setSavingTimeframe(true);
+    await onUpdateTimeframe(task.id, draftTimeframe);
+    setSavingTimeframe(false);
+    setEditingTimeframe(false);
   }
 
-  function handleCancelDates() {
-    setDraftStart(task.startDate);
-    setDraftEnd(task.endDate);
-    setEditingDates(false);
+  function handleCancelTimeframe() {
+    setDraftTimeframe(task.timeframe ?? "2 weeks");
+    setEditingTimeframe(false);
   }
 
   return (
@@ -168,39 +165,33 @@ function SortableTaskCard({
       </p>
       <p className="mt-1 text-[11px] text-sky-300">Project: {task.projectId}</p>
 
-      {/* Dates row */}
-      {editingDates ? (
+      {/* Timeframe row */}
+      {editingTimeframe ? (
         <div className="mt-2 space-y-2">
           <div className="flex items-center gap-2">
-            <label className="text-[11px] text-zinc-400 w-16 shrink-0">Start</label>
-            <input
-              type="date"
-              value={draftStart}
-              onChange={(e) => setDraftStart(e.target.value)}
+            <label className="w-20 shrink-0 text-[11px] text-zinc-400">Sprint</label>
+            <select
+              value={draftTimeframe}
+              onChange={(e) => setDraftTimeframe(e.target.value as TimeframeOption)}
               className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-[11px] text-zinc-400 w-16 shrink-0">Due</label>
-            <input
-              type="date"
-              value={draftEnd}
-              onChange={(e) => setDraftEnd(e.target.value)}
-              className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
-            />
+            >
+              {TIMEFRAME_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleSaveDates}
-              disabled={savingDates}
+              onClick={handleSaveTimeframe}
+              disabled={savingTimeframe}
               className="rounded-md bg-sky-600 px-3 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50 transition-colors"
             >
-              {savingDates ? "Saving…" : "Save"}
+              {savingTimeframe ? "Saving…" : "Save"}
             </button>
             <button
               type="button"
-              onClick={handleCancelDates}
+              onClick={handleCancelTimeframe}
               className="rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
             >
               Cancel
@@ -209,20 +200,15 @@ function SortableTaskCard({
         </div>
       ) : (
         <div className="mt-1 flex items-center gap-2">
-          {isOverdue ? (
-            <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
-              OVERDUE
-            </span>
-          ) : null}
-          <span className="text-[11px] text-zinc-400">
-            {task.startDate} – {task.endDate}
+          <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+            {task.timeframe ?? "2 weeks"}
           </span>
           <button
             type="button"
-            onClick={() => setEditingDates(true)}
+            onClick={() => setEditingTimeframe(true)}
             className="text-[11px] text-zinc-500 hover:text-sky-400 transition-colors underline underline-offset-2"
           >
-            Edit dates
+            Edit sprint
           </button>
         </div>
       )}
@@ -259,13 +245,13 @@ function TaskColumn({
   items,
   onMoveTask,
   onDeleteTask,
-  onUpdateDates,
+  onUpdateTimeframe,
 }: {
   status: Task["status"];
   items: Task[];
   onMoveTask: (taskId: string, status: Task["status"]) => void;
   onDeleteTask: (taskId: string) => void;
-  onUpdateDates: (taskId: string, startDate: string, endDate: string) => Promise<void>;
+  onUpdateTimeframe: (taskId: string, timeframe: TimeframeOption) => Promise<void>;
 }) {
   const droppableId = `column:${status}`;
   const { setNodeRef, isOver } = useDroppable({ id: droppableId });
@@ -291,7 +277,7 @@ function TaskColumn({
               task={task}
               onMoveTask={onMoveTask}
               onDeleteTask={onDeleteTask}
-              onUpdateDates={onUpdateDates}
+              onUpdateTimeframe={onUpdateTimeframe}
             />
           ))}
           {items.length === 0 ? (
@@ -311,8 +297,7 @@ export default function DashboardTasksPage() {
   const [priority, setPriority] = useState<Task["priority"]>("medium");
   const [category, setCategory] = useState("General");
   const [month, setMonth] = useState(new Date().toLocaleString("en-US", { month: "long" }));
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [timeframe, setTimeframe] = useState<TimeframeOption>("2 weeks");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -375,11 +360,6 @@ export default function DashboardTasksPage() {
       setError("Create a project first before adding tasks");
       return;
     }
-    if (!startDate) {
-      setError("A scheduled date is required");
-      return;
-    }
-
     try {
       setError("");
       const created = await addTask({
@@ -390,25 +370,25 @@ export default function DashboardTasksPage() {
         month: month.trim() || "Unscheduled",
         notes: "",
         projectId,
-        startDate,
-        endDate: endDate || startDate,
+        startDate: "",
+        endDate: "",
+        timeframe,
       });
       setTasks((prev) => [...prev, created]);
       setTitle("");
-      setStartDate("");
-      setEndDate("");
+      setTimeframe("2 weeks");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to add task";
       setError(msg);
     }
   }
 
-  async function onUpdateDates(taskId: string, startDate: string, endDate: string) {
+  async function onUpdateTimeframe(taskId: string, timeframe: TimeframeOption) {
     try {
-      const updated = await updateTask(taskId, { startDate, endDate });
+      const updated = await updateTask(taskId, { timeframe, startDate: "", endDate: "" });
       setTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to update dates";
+      const msg = err instanceof Error ? err.message : "Failed to update timeframe";
       setError(msg);
     }
   }
@@ -456,7 +436,7 @@ export default function DashboardTasksPage() {
   return (
     <DashboardShell
       title="Task Manager"
-      description="Create and edit tasks here. Every task must be linked to a project and scheduled."
+      description="Create and edit tasks here. Every task stays linked to a project and is planned in relative sprint intervals."
     >
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
@@ -526,21 +506,18 @@ export default function DashboardTasksPage() {
             placeholder="Month"
             className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
           />
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+          <select
+            value={timeframe}
+            onChange={(e) => setTimeframe(e.target.value as TimeframeOption)}
             className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
-          />
+          >
+            {TIMEFRAME_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-zinc-500">New ideas are added to Planned by default.</p>
+          <p className="text-xs text-zinc-500">New ideas are added to Planned by default and tracked in sprint blocks.</p>
           <button
             type="submit"
             disabled={projects.length === 0}
@@ -562,7 +539,7 @@ export default function DashboardTasksPage() {
               items={tasksByColumn[status]}
               onMoveTask={onMoveTask}
               onDeleteTask={onDeleteTask}
-              onUpdateDates={onUpdateDates}
+              onUpdateTimeframe={onUpdateTimeframe}
             />
           ))}
         </div>

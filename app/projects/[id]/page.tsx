@@ -74,6 +74,11 @@ export default function ProjectDetailPage() {
             <span className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-zinc-300">
               {project.status}
             </span>
+            {project.timeframe ? (
+              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">
+                {project.timeframe}
+              </span>
+            ) : null}
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
@@ -82,6 +87,12 @@ export default function ProjectDetailPage() {
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-zinc-400">
             {project.description}
           </p>
+
+          {(project.subcategoryPath ?? []).length > 0 ? (
+            <p className="mt-4 text-sm text-zinc-500">
+              Grouped under: {(project.subcategoryPath ?? []).join(" > ")}
+            </p>
+          ) : null}
 
           <div className="mt-8 flex flex-wrap gap-2">
             {project.techs.map((tech) => (

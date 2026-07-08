@@ -23,6 +23,15 @@ function renderLines(content: string) {
   });
 }
 
+function formatDate(value: string): string {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function NotesPage() {
   const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,40 +69,64 @@ export default function NotesPage() {
         </div>
       ) : null}
 
-      <div className="space-y-6">
-        {notes.map((note) => (
-          <article
-            key={note.id}
-            className="rounded-xl border border-zinc-800 bg-zinc-900 p-6"
-          >
-            <div className="flex flex-col gap-3 border-b border-zinc-800 pb-5 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-white">{note.title}</h2>
+      <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-2xl border border-zinc-800 bg-zinc-900 p-4 lg:sticky lg:top-24">
+          <p className="mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500">Browse Notes</p>
+          <div className="space-y-2">
+            {notes.map((note) => (
+              <a
+                key={note.id}
+                href={`#${note.id}`}
+                className="block rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-3 transition-colors hover:border-sky-500/30"
+              >
+                <p className="text-sm font-medium text-white">{note.title}</p>
                 {note.summary ? (
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                  <p className="mt-1 text-xs leading-5 text-zinc-500 line-clamp-2">
                     {note.summary}
                   </p>
                 ) : null}
+              </a>
+            ))}
+          </div>
+        </aside>
+
+        <div className="space-y-6">
+          {notes.map((note) => (
+            <article
+              id={note.id}
+              key={note.id}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6"
+            >
+              <div className="flex flex-col gap-3 border-b border-zinc-800 pb-5 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-white">{note.title}</h2>
+                  {note.summary ? (
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                      {note.summary}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="text-right text-xs text-zinc-500">
+                  <p>Updated</p>
+                  <p className="mt-1 text-zinc-300">{formatDate(note.updatedAt)}</p>
+                </div>
               </div>
-              <div className="text-xs text-zinc-500">
-                {note.updatedAt ? new Date(note.updatedAt).toLocaleDateString() : ""}
-              </div>
-            </div>
-            {note.tags.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {note.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            <div className="mt-6 space-y-3">{renderLines(note.content)}</div>
-          </article>
-        ))}
+              {note.tags.length > 0 ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {note.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <div className="mt-6 space-y-3">{renderLines(note.content)}</div>
+            </article>
+          ))}
+        </div>
       </div>
     </div>
   );

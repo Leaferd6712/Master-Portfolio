@@ -113,6 +113,16 @@ export default function ProjectCard({ project }: { project: Project }) {
 
         {/* Tech stack */}
         <div className="flex flex-wrap gap-1.5">
+          {project.featured ? (
+            <span className="text-xs rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-300">
+              Featured
+            </span>
+          ) : null}
+          {project.timeframe ? (
+            <span className="text-xs rounded-md border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-sky-300">
+              {project.timeframe}
+            </span>
+          ) : null}
           {project.techs.map((tech) => (
             <span
               key={tech}

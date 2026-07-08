@@ -24,13 +24,19 @@ export default function DashboardNotesPage() {
   const [activeId, setActiveId] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
-      const [noteData, projectData] = await Promise.all([getNotes(), getProjects()]);
-      setNotes(noteData);
-      setProjects(projectData);
-      setActiveId(noteData[0]?.id ?? "");
+      try {
+        const [noteData, projectData] = await Promise.all([getNotes(), getProjects()]);
+        setNotes(noteData);
+        setProjects(projectData);
+        setActiveId(noteData[0]?.id ?? "");
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to load notes";
+        setError(msg);
+      }
     }
     void load();
   }, []);
@@ -44,6 +50,7 @@ export default function DashboardNotesPage() {
       )
     );
     setMessage("");
+    setError("");
   }
 
   function addNote() {
@@ -63,11 +70,18 @@ export default function DashboardNotesPage() {
 
   async function save() {
     setSaving(true);
-    const saved = await updateNotes(notes);
-    setNotes(saved);
-    setActiveId((current) => current || saved[0]?.id || "");
-    setSaving(false);
-    setMessage("Notes saved.");
+    setError("");
+    try {
+      const saved = await updateNotes(notes);
+      setNotes(saved);
+      setActiveId((current) => current || saved[0]?.id || "");
+      setMessage("Notes saved.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save notes";
+      setError(msg);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -75,6 +89,12 @@ export default function DashboardNotesPage() {
       title="Notes CMS"
       description="Write and publish project documentation for the public Notes tab."
     >
+      {error ? (
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          {error}
+        </div>
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -87,6 +107,9 @@ export default function DashboardNotesPage() {
               Add
             </button>
           </div>
+          <p className="mb-4 text-xs leading-5 text-zinc-500">
+            Draft here, connect notes to projects, and publish only the entries that should appear on the public Notes route.
+          </p>
           <div className="space-y-2">
             {notes.map((note) => (
               <button

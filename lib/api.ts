@@ -8,6 +8,7 @@
  */
 
 import type { Project, ProjectLink } from "@/components/ProjectCard";
+import { cloneDefaultSiteTabs } from "@/lib/site-config";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -304,7 +305,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return { tabs: candidate.tabs };
     }
   }
-  return { tabs: [] };
+  return { tabs: cloneDefaultSiteTabs() };
 }
 
 export async function updateSiteSettings(

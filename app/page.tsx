@@ -4,42 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { getProjects, getSiteSettings, type SiteTab } from "@/lib/api";
-import { publicProjects } from "@/lib/categories";
+import { cloneDefaultSiteTabs } from "@/lib/site-config";
 
-const fallbackInterests: SiteTab[] = [
-  {
-    icon: "🤖",
-    label: "Robotics",
-    href: "/projects",
-    desc: "Building autonomous systems and physical computing projects.",
-    showInNav: false,
-    showInInterests: true,
-  },
-  {
-    icon: "🧠",
-    label: "AI / ML",
-    href: "/ai",
-    desc: "YOLO models, classifiers, vision systems, and neural nets.",
-    showInNav: true,
-    showInInterests: true,
-  },
-  {
-    icon: "💻",
-    label: "Coding",
-    href: "/projects",
-    desc: "Python, TypeScript, system design, and backend APIs.",
-    showInNav: false,
-    showInInterests: true,
-  },
-  {
-    icon: "🎮",
-    label: "Games",
-    href: "/games",
-    desc: "Mini simulations, 2D games, and interactive experiences.",
-    showInNav: true,
-    showInInterests: true,
-  },
-];
+const fallbackInterests: SiteTab[] = cloneDefaultSiteTabs().filter(
+  (tab) => tab.showInInterests && tab.showInNav
+);
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<Project[]>([]);

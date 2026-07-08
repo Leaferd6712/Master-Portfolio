@@ -1,18 +1,34 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/dashboard/LogoutButton";
 import MaintenanceToggle from "@/components/dashboard/MaintenanceToggle";
 import DownloadDataButton from "@/components/dashboard/DownloadDataButton";
 
-const dashboardLinks = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/tasks", label: "Tasks" },
-  { href: "/dashboard/all-tasks", label: "All Tasks" },
-  { href: "/dashboard/roadmap", label: "Roadmap" },
-  { href: "/dashboard/projects", label: "Projects" },
-  { href: "/dashboard/tabs", label: "Tabs" },
-  { href: "/dashboard/notes", label: "Notes" },
-  { href: "/dashboard/context", label: "Context" },
-  { href: "/dashboard/ai", label: "AI Panel" },
+const dashboardGroups = [
+  {
+    label: "Workspace",
+    links: [
+      { href: "/dashboard", label: "Overview" },
+      { href: "/dashboard/projects", label: "Projects" },
+      { href: "/dashboard/tasks", label: "Tasks" },
+      { href: "/dashboard/all-tasks", label: "All Tasks" },
+    ],
+  },
+  {
+    label: "Content",
+    links: [
+      { href: "/dashboard/tabs", label: "Navigation CMS" },
+      { href: "/dashboard/notes", label: "Notes CMS" },
+      { href: "/dashboard/roadmap", label: "Roadmap" },
+      { href: "/dashboard/context", label: "Context" },
+    ],
+  },
+  {
+    label: "Tools",
+    links: [{ href: "/dashboard/ai", label: "AI Panel" }],
+  },
 ];
 
 export default function DashboardShell({
@@ -24,25 +40,43 @@ export default function DashboardShell({
   description: string;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-8">
-        <aside className="lg:sticky lg:top-24 h-fit bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-sky-400 mb-4">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-3xl border border-zinc-800 bg-zinc-900 p-4 lg:sticky lg:top-24">
+          <p className="mb-4 text-xs uppercase tracking-[0.25em] text-sky-400">
             Dashboard
           </p>
-          <nav className="flex flex-col gap-2">
-            {dashboardLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="px-3 py-2 rounded-lg text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
-              >
-                {link.label}
-              </Link>
+          <div className="space-y-5">
+            {dashboardGroups.map((group) => (
+              <div key={group.label}>
+                <p className="mb-2 px-3 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                  {group.label}
+                </p>
+                <nav className="flex flex-col gap-1">
+                  {group.links.map((link) => {
+                    const isActive = pathname === link.href;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`rounded-xl px-3 py-2 text-sm transition-colors ${
+                          isActive
+                            ? "bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/30"
+                            : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
             ))}
-          </nav>
-          <div className="mt-6 pt-6 border-t border-zinc-800 space-y-4">
+          </div>
+          <div className="mt-6 space-y-4 border-t border-zinc-800 pt-6">
             <MaintenanceToggle />
             <DownloadDataButton />
             <LogoutButton />
@@ -50,7 +84,7 @@ export default function DashboardShell({
         </aside>
 
         <section className="min-w-0">
-          <header className="mb-8">
+          <header className="mb-8 rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
             <h1 className="text-3xl md:text-4xl font-bold text-white">
               {title}
             </h1>

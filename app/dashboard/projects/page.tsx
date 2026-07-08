@@ -8,9 +8,11 @@ import {
   deleteProject,
   getProjects,
   getSiteSettings,
+  type TimeframeOption,
   updateProject,
 } from "@/lib/api";
 import { flattenTabs } from "@/lib/categories";
+import { TIMEFRAME_OPTIONS } from "@/lib/site-config";
 
 function progressLabel(pct: number): string {
   if (pct === 0) return "Not started";
@@ -76,6 +78,9 @@ export default function DashboardProjectsPage() {
   const [category, setCategory] = useState("Games");
   const [subcategoryPathInput, setSubcategoryPathInput] = useState("");
   const [status, setStatus] = useState("planned");
+  const [timeframe, setTimeframe] = useState<TimeframeOption>("2 weeks");
+  const [visibility, setVisibility] = useState<Project["visibility"]>("draft");
+  const [featured, setFeatured] = useState(false);
   const [links, setLinks] = useState<ProjectLink[]>(DEFAULT_LINKS);
   const [techs, setTechs] = useState("");
   const [progress, setProgress] = useState(0);
@@ -136,6 +141,9 @@ export default function DashboardProjectsPage() {
         category,
         subcategoryPath: parseSubcategoryPath(subcategoryPathInput),
         status,
+        timeframe,
+        visibility: progress >= 100 ? "public" : visibility,
+        featured,
         links: links.filter((l) => l.url.trim()),
         image: imagePreview,
         progress,
@@ -149,6 +157,9 @@ export default function DashboardProjectsPage() {
       setDescription("");
       setHiddenNotes("");
       setSubcategoryPathInput("");
+      setTimeframe("2 weeks");
+      setVisibility("draft");
+      setFeatured(false);
       setLinks(DEFAULT_LINKS);
       setTechs("");
       setProgress(0);
@@ -254,6 +265,60 @@ export default function DashboardProjectsPage() {
                   <option value="finished" />
                 </datalist>
               </>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <label className="block">
+                <span className="text-sm font-medium text-zinc-300">Sprint timeframe</span>
+                <select
+                  value={timeframe}
+                  onChange={(e) => setTimeframe(e.target.value as TimeframeOption)}
+                  className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200"
+                >
+                  {TIMEFRAME_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-zinc-300">Visibility</span>
+                <select
+                  value={progress >= 100 ? "public" : visibility}
+                  onChange={(e) => setVisibility(e.target.value as Project["visibility"])}
+                  disabled={progress >= 100}
+                  className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200 disabled:opacity-60"
+                >
+                  <option value="public">Publish to Public Portfolio</option>
+                  <option value="draft">Keep as Draft</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-300">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium text-white">Visibility rule for work in progress</p>
+                  <p className="mt-1 text-zinc-500">
+                    Projects below 100% can be published publicly or kept private as drafts while you work on them.
+                  </p>
+                </div>
+                <label className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-sky-400"
+                  />
+                  Mark as featured
+                </label>
+              </div>
+              <p className="mt-3 text-xs text-zinc-500">
+                {progress >= 100
+                  ? "Completed projects are published automatically."
+                  : visibility === "public"
+                    ? "This work in progress will appear on the public portfolio."
+                    : "This work in progress stays private inside the dashboard until you publish it."}
+              </p>
             </div>
 
             <input
@@ -434,6 +499,9 @@ export default function DashboardProjectsPage() {
                     <div>
                       <p className="text-white font-semibold text-sm">{project.title}</p>
                       <p className="text-zinc-500 text-xs mt-0.5">{project.category}</p>
+                      <p className="mt-0.5 text-xs text-zinc-600">
+                        {project.visibility === "draft" ? "Draft" : "Public"} · {project.timeframe ?? "2 weeks"}
+                      </p>
                       {(project.subcategoryPath ?? []).length > 0 ? (
                         <p className="text-zinc-600 text-xs mt-0.5">
                           {(project.subcategoryPath ?? []).join(" > ")}
@@ -546,6 +614,44 @@ export default function DashboardProjectsPage() {
                         style={{ width: `${project.progress ?? 0}%` }}
                       />
                     </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <label className="block">
+                      <span className="text-xs text-zinc-400">Sprint timeframe</span>
+                      <select
+                        value={project.timeframe ?? "2 weeks"}
+                        onChange={(e) => void onFieldUpdate(project.id, { timeframe: e.target.value as TimeframeOption })}
+                        className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200"
+                      >
+                        {TIMEFRAME_OPTIONS.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-zinc-400">Visibility</span>
+                      <select
+                        value={project.progress === 100 ? "public" : (project.visibility ?? "draft")}
+                        onChange={(e) => void onFieldUpdate(project.id, { visibility: e.target.value as Project["visibility"] })}
+                        disabled={(project.progress ?? 0) >= 100}
+                        className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 disabled:opacity-60"
+                      >
+                        <option value="public">Publish to Public Portfolio</option>
+                        <option value="draft">Keep as Draft</option>
+                      </select>
+                    </label>
+                    <label className="flex items-end">
+                      <span className="inline-flex w-full items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(project.featured)}
+                          onChange={(e) => void onFieldUpdate(project.id, { featured: e.target.checked })}
+                          className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-sky-400"
+                        />
+                        Featured project
+                      </span>
+                    </label>
                   </div>
 
                   {/* Image upload */}

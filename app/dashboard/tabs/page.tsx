@@ -8,6 +8,10 @@ import {
   type SiteSettings,
   updateSiteSettings,
 } from "@/lib/api";
+import {
+  cloneDefaultSiteTabs,
+  normalizeDashboardSaveError,
+} from "@/lib/site-config";
 
 const EMPTY_TAB: SiteTab = {
   label: "",
@@ -113,10 +117,11 @@ export default function DashboardTabsPage() {
     async function load() {
       try {
         const settings = await getSiteSettings();
-        setTabs(settings.tabs ?? []);
+        setTabs(settings.tabs?.length ? settings.tabs : cloneDefaultSiteTabs());
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load tabs";
         setError(msg);
+        setTabs(cloneDefaultSiteTabs());
       } finally {
         setLoading(false);
       }
@@ -170,14 +175,20 @@ export default function DashboardTabsPage() {
         tabs: sanitizeTabs(tabs),
       };
       const saved = await updateSiteSettings(payload);
-      setTabs(saved.tabs ?? []);
+      setTabs(saved.tabs?.length ? saved.tabs : cloneDefaultSiteTabs());
       setSuccess("Saved navigation, interests cards, and subcategories successfully.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save tabs";
-      setError(msg);
+      setError(normalizeDashboardSaveError(msg));
     } finally {
       setSaving(false);
     }
+  }
+
+  function resetToDefaults() {
+    setTabs(cloneDefaultSiteTabs());
+    setError(null);
+    setSuccess("Loaded the starter AI / ML, Games, CAD, Backend, Tools, Notes, and Contact structure.");
   }
 
   const hasValidationErrors = useMemo(() => hasInvalidTabFields(tabs), [tabs]);
@@ -333,6 +344,9 @@ export default function DashboardTabsPage() {
                 Add, edit, remove, and reorder tabs at any depth. Each item supports icon, title,
                 description, and destination link. Changes sync both the top navigation and homepage cards.
               </p>
+              <p className="mt-2 text-xs text-zinc-500">
+                Starter categories are auto-loaded if your config is empty, so the manager always opens with a usable baseline.
+              </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
@@ -341,6 +355,13 @@ export default function DashboardTabsPage() {
                 className="inline-flex items-center justify-center rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-400"
               >
                 + Add top-level tab
+              </button>
+              <button
+                type="button"
+                onClick={resetToDefaults}
+                className="inline-flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white"
+              >
+                Reset starter tabs
               </button>
               <button
                 type="button"

@@ -4,23 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSiteSettings, type SiteTab } from "@/lib/api";
+import { cloneDefaultSiteTabs } from "@/lib/site-config";
 
-const fallbackTabs: SiteTab[] = [
-  { href: "/projects", label: "Projects" },
-  { href: "/ai", label: "AI / ML" },
-  { href: "/games", label: "Games" },
-  { href: "/cad", label: "CAD" },
-  { href: "/backend-tools", label: "Backend" },
-  { href: "/notes", label: "Notes" },
-  { href: "/contact", label: "Contact" },
-].map((tab) => ({
-  ...tab,
-  icon: "",
-  desc: "",
-  showInNav: true,
-  showInInterests: false,
-  children: [],
-}));
+const fallbackTabs: SiteTab[] = cloneDefaultSiteTabs();
 
 export default function Navbar() {
   const pathname = usePathname();

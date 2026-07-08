@@ -43,17 +43,10 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const openTasks = useMemo(() => tasks.filter((task) => task.status !== "done"), [tasks]);
-  const todayFocusTasks = useMemo(
-    () =>
-      tasks.filter((task) => {
-        if (task.status === "done") return false;
-        const start = task.startDate;
-        const end = task.endDate || task.startDate;
-        return start <= todayIso && todayIso <= end;
-      }),
-    [tasks, todayIso]
+  const sprintFocusTasks = useMemo(
+    () => tasks.filter((task) => task.status !== "done").slice(0, 4),
+    [tasks]
   );
 
   const activeProjects = useMemo(
@@ -97,7 +90,7 @@ export default function DashboardPage() {
             <p className="text-zinc-500">Loading tasks...</p>
           ) : (
             <div className="space-y-4">
-              {todayFocusTasks.slice(0, 4).map((task) => (
+              {sprintFocusTasks.map((task) => (
                 <div key={task.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -105,16 +98,14 @@ export default function DashboardPage() {
                       <p className="mt-1 text-sm text-zinc-500">
                         {task.category} · {task.priority} priority · {task.month}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-400">
-                        {task.startDate} — {task.endDate}
-                      </p>
+                      <p className="mt-1 text-xs text-emerald-300">Sprint: {task.timeframe}</p>
                     </div>
                     <TaskStatusBadge status={task.status} />
                   </div>
                 </div>
               ))}
-              {todayFocusTasks.length === 0 ? (
-                <p className="text-zinc-500">No tasks are scheduled for today.</p>
+              {sprintFocusTasks.length === 0 ? (
+                <p className="text-zinc-500">No active sprint tasks right now.</p>
               ) : null}
             </div>
           )}
