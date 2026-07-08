@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { buildPortfolioContextSummary } from "@/lib/portfolio-context";
+import { getAuthHeaderFromCookie, toBackendUrl } from "@/app/api/_lib/backend";
 
 const LM_STUDIO_URL =
   process.env.LOCAL_AI_URL ?? "http://127.0.0.1:1234";
@@ -20,9 +22,43 @@ export async function POST(req: Request) {
   }
 
   const history: ChatMessage[] = Array.isArray(body.history) ? body.history : [];
+  const authHeaders = await getAuthHeaderFromCookie();
+
+  const [contextRes, projectsRes, tasksRes] = await Promise.all([
+    fetch(toBackendUrl("/context"), { headers: authHeaders, cache: "no-store" }),
+    fetch(toBackendUrl("/projects"), { headers: authHeaders, cache: "no-store" }),
+    fetch(toBackendUrl("/tasks"), { headers: authHeaders, cache: "no-store" }),
+  ]);
+
+  const contextData = await contextRes.json().catch(() => null);
+  const projectsData = await projectsRes.json().catch(() => null);
+  const tasksData = await tasksRes.json().catch(() => null);
+
+  const contextText =
+    typeof contextData === "object" && contextData && "content" in contextData
+      ? String((contextData as { content?: unknown }).content ?? "")
+      : "";
+
+  const projects = Array.isArray(projectsData)
+    ? projectsData
+    : Array.isArray((projectsData as { projects?: unknown })?.projects)
+      ? ((projectsData as { projects?: unknown }).projects as unknown[])
+      : [];
+
+  const tasks = Array.isArray(tasksData)
+    ? tasksData
+    : Array.isArray((tasksData as { tasks?: unknown })?.tasks)
+      ? ((tasksData as { tasks?: unknown }).tasks as unknown[])
+      : [];
+
+  const portfolioContext = buildPortfolioContextSummary({
+    contextText,
+    projects,
+    tasks,
+  });
 
   const messages: ChatMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: `${SYSTEM_PROMPT}\n\n${portfolioContext}` },
     ...history,
     { role: "user", content: body.message.trim() },
   ];

@@ -1,8 +1,10 @@
 Link: mathias-master-portfolio.vercel.app
 
+If you have already pushed the latest code to GitHub, you can test the local AI setup on your machine with the following steps.
+
 TERMINAL 1 — FastAPI backend
 
-cd "C:\Users\663208\Downloads\Master-Portfolio\backend"
+cd "C:\Users\mcmat\Documents\Master-Portfolio\backend"
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 
 TERMINAL 2 — LM Studio
@@ -15,7 +17,7 @@ You should see: Server is running at http://127.0.0.1:1234
 
 TERMINAL 3 — Node proxy  ← THIS MUST BE RUNNING BEFORE NGROK
 --------------------------------------------------------------
-cd "LocalAI"
+cd "C:\Users\mcmat\Documents\Master-Portfolio\LocalAI"
 node server.js
 
 Leave running. You should see: Open http://localhost:3000 (bound to 0.0.0.0)
