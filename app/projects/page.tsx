@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import ProjectCard, { Project } from "@/components/ProjectCard";
 import { getProjects, getSiteSettings } from "@/lib/api";
 import { buildDescendantLabelMap, flattenTabs } from "@/lib/categories";
 
 export default function ProjectsPage() {
-  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -57,11 +55,12 @@ export default function ProjectsPage() {
   }, []);
 
   useEffect(() => {
-    const categoryFromQuery = searchParams.get("category");
+    const params = new URLSearchParams(window.location.search);
+    const categoryFromQuery = params.get("category");
     if (categoryFromQuery?.trim()) {
       setActiveCategory(categoryFromQuery.trim());
     }
-  }, [searchParams]);
+  }, []);
 
   const filtered = useMemo(() => {
     return projects.filter((p) => {
