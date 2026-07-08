@@ -19,24 +19,30 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     async function load() {
-      try {
-        const [data, settings] = await Promise.all([getProjects(), getSiteSettings()]);
-        setProjects(data);
-        const nodes = flattenTabs(settings.tabs)
-          .filter((node) => node.label !== "Notes" && node.label !== "Contact")
-          .map((node) => ({ label: node.label, depth: node.depth }));
-        const projectCategories = Array.from(
-          new Set(data.map((project) => project.category).filter(Boolean))
-        ).map((label) => ({ label, depth: 0 }));
-        const seen = new Set<string>();
-        setCategories([...nodes, ...projectCategories].filter((item) => {
-          if (seen.has(item.label)) return false;
-          seen.add(item.label);
-          return true;
-        }));
-      } catch {
-        setProjects([]);
-      }
+      const [projectsResult, settingsResult] = await Promise.allSettled([
+        getProjects(),
+        getSiteSettings(),
+      ]);
+
+      const data = projectsResult.status === "fulfilled" ? projectsResult.value : [];
+      setProjects(data);
+
+      const tabNodes = settingsResult.status === "fulfilled"
+        ? flattenTabs(settingsResult.value.tabs)
+            .filter((node) => node.label !== "Notes" && node.label !== "Contact")
+            .map((node) => ({ label: node.label, depth: node.depth }))
+        : [];
+
+      const projectCategories = Array.from(
+        new Set(data.map((project) => project.category).filter(Boolean))
+      ).map((label) => ({ label, depth: 0 }));
+
+      const seen = new Set<string>();
+      setCategories([...tabNodes, ...projectCategories].filter((item) => {
+        if (seen.has(item.label)) return false;
+        seen.add(item.label);
+        return true;
+      }));
     }
     void load();
   }, []);

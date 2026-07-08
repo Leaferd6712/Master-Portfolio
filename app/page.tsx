@@ -47,21 +47,23 @@ export default function HomePage() {
 
   useEffect(() => {
     async function load() {
-      try {
-        const [projects, settings] = await Promise.all([
-          getProjects(),
-          getSiteSettings(),
-        ]);
-        // Filter out draft projects if visibility field exists
-        const visibleProjects = projects.filter((p) => p.visibility !== "draft");
-        // Prefer featured projects, otherwise show first 3
+      const [projectsResult, settingsResult] = await Promise.allSettled([
+        getProjects(),
+        getSiteSettings(),
+      ]);
+
+      if (projectsResult.status === "fulfilled") {
+        const visibleProjects = projectsResult.value.filter((p) => p.visibility !== "draft");
         const markedFeatured = visibleProjects.filter((p) => p.featured === true);
         setFeatured((markedFeatured.length > 0 ? markedFeatured : visibleProjects).slice(0, 3));
-
-        const interestTabs = settings.tabs.filter((tab) => tab.showInInterests);
-        setInterests(interestTabs.length ? interestTabs : fallbackInterests);
-      } catch {
+      } else {
         setFeatured([]);
+      }
+
+      if (settingsResult.status === "fulfilled") {
+        const interestTabs = settingsResult.value.tabs.filter((tab) => tab.showInInterests);
+        setInterests(interestTabs.length ? interestTabs : fallbackInterests);
+      } else {
         setInterests(fallbackInterests);
       }
     }

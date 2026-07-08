@@ -83,6 +83,27 @@ async function readJson<T>(res: Response): Promise<T> {
   return payload as T;
 }
 
+function normalizeProjectPayload(payload: unknown): Project[] {
+  if (Array.isArray(payload)) return payload as Project[];
+  if (payload && typeof payload === "object") {
+    const candidate = payload as { projects?: unknown; items?: unknown; data?: unknown };
+    if (Array.isArray(candidate.projects)) return candidate.projects as Project[];
+    if (Array.isArray(candidate.items)) return candidate.items as Project[];
+    if (Array.isArray(candidate.data)) return candidate.data as Project[];
+  }
+  return [];
+}
+
+async function tryFetchJson(url: string): Promise<unknown | null> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 // ── Auth ───────────────────────────────────────────────────────────────────────
 
 export async function login(password: string): Promise<void> {
@@ -103,8 +124,17 @@ export async function logout(): Promise<void> {
 // ── Projects ──────────────────────────────────────────────────────────────────
 
 export async function getProjects(): Promise<Project[]> {
-  const res = await fetch("/api/projects", { cache: "no-store" });
-  return readJson<Project[]>(res);
+  // Keep public pages resilient across local proxy, Next API route, and deployment setups.
+  const sources = ["/api/projects", "/backend/projects"];
+  for (const url of sources) {
+    const payload = await tryFetchJson(url);
+    if (!payload) continue;
+    const projects = normalizeProjectPayload(payload);
+    if (projects.length > 0 || Array.isArray(payload)) {
+      return projects;
+    }
+  }
+  return [];
 }
 
 export async function addProject(data: Omit<Project, "id">): Promise<Project> {
@@ -265,8 +295,16 @@ export async function updateMaintenanceMode(
 // Site tabs
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const res = await fetch("/api/site-settings", { cache: "no-store" });
-  return readJson<SiteSettings>(res);
+  const sources = ["/api/site-settings", "/backend/site-settings"];
+  for (const url of sources) {
+    const payload = await tryFetchJson(url);
+    if (!payload || typeof payload !== "object") continue;
+    const candidate = payload as Partial<SiteSettings>;
+    if (Array.isArray(candidate.tabs)) {
+      return { tabs: candidate.tabs };
+    }
+  }
+  return { tabs: [] };
 }
 
 export async function updateSiteSettings(
