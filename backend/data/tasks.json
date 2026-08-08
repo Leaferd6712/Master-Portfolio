@@ -9,7 +9,8 @@
     "projectId": "project",
     "startDate": "2026-06-15",
     "endDate": "2026-07-10",
-    "id": "16"
+    "id": "16",
+    "timeframe": "2 weeks"
   },
   {
     "id": "11",
@@ -21,7 +22,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "kartblitz",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "12",
@@ -33,7 +35,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "student-hub",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "1",
@@ -45,7 +48,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "blob-game",
     "startDate": "2026-05-13",
-    "endDate": "2026-05-14"
+    "endDate": "2026-05-14",
+    "timeframe": "2 weeks"
   },
   {
     "id": "2",
@@ -57,7 +61,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "offline-music-player",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "3",
@@ -69,7 +74,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "quizblast",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "4",
@@ -81,7 +87,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "mini-market-simulation",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "5",
@@ -93,7 +100,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "pothole-instance-segmentation",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "6",
@@ -105,7 +113,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "stellar-siege",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "10",
@@ -117,7 +126,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "australian-bill-counter",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "7",
@@ -129,7 +139,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "memories-game",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-31"
+    "endDate": "2026-05-31",
+    "timeframe": "2 weeks"
   },
   {
     "id": "13",
@@ -141,7 +152,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "3d-printing",
     "startDate": "2026-06-15",
-    "endDate": "2026-06-15"
+    "endDate": "2026-06-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "9",
@@ -153,7 +165,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "yolov5-auto-model-loader-2",
     "startDate": "2026-05-15",
-    "endDate": "2026-05-15"
+    "endDate": "2026-05-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "17",
@@ -165,7 +178,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "minecraft-redstone-calculator",
     "startDate": "2026-06-15",
-    "endDate": "2026-06-15"
+    "endDate": "2026-06-15",
+    "timeframe": "2 weeks"
   },
   {
     "id": "14",
@@ -177,7 +191,8 @@
     "notes": "Auto-created from project progress.",
     "projectId": "yolov5-auto-model-loader",
     "startDate": "2026-06-15",
-    "endDate": "2026-06-15"
+    "endDate": "2026-06-15",
+    "timeframe": "2 weeks"
   },
   {
     "title": "AI Music",
@@ -189,7 +204,8 @@
     "projectId": "project",
     "startDate": "2026-03-02",
     "endDate": "2028-03-02",
-    "id": "18"
+    "id": "18",
+    "timeframe": "2 weeks"
   },
   {
     "title": "Youtube Video Creation",
@@ -201,7 +217,8 @@
     "projectId": "project",
     "startDate": "2026-01-01",
     "endDate": "2027-01-01",
-    "id": "19"
+    "id": "19",
+    "timeframe": "2 weeks"
   },
   {
     "title": "Move GPU Trained Object Detection and Instance Segmentation Models into the Portfolio.",
@@ -213,7 +230,8 @@
     "projectId": "project",
     "startDate": "2026-05-05",
     "endDate": "2026-07-03",
-    "id": "20"
+    "id": "20",
+    "timeframe": "2 weeks"
   },
   {
     "title": "LLSP3 Spike Prime Code to txt",
@@ -225,7 +243,8 @@
     "projectId": "project",
     "startDate": "2026-02-07",
     "endDate": "2029-02-03",
-    "id": "21"
+    "id": "21",
+    "timeframe": "2 weeks"
   },
   {
     "title": "Roboflow Account Fix (Transfer All First Account Projects to Second Account, then train them, keep Australian bills in first)",
@@ -237,6 +256,7 @@
     "projectId": "project",
     "startDate": "2026-02-03",
     "endDate": "2026-09-03",
-    "id": "22"
+    "id": "22",
+    "timeframe": "2 weeks"
   }
 ]

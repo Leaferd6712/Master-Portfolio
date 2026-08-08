@@ -1,5 +1,7 @@
 Link: mathias-master-portfolio.vercel.app
 
+password for the dashboard is  at C:\Users\mcmat\Documents\Master-Portfolio\backend\.env.example
+
 If you have already pushed the latest code to GitHub, you can test the local AI setup on your machine with the following steps.
 
 TERMINAL 1 — FastAPI backend
