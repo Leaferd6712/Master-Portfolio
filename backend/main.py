@@ -27,7 +27,7 @@ SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
 SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
 NOTES_PATH = DATA_DIR / "notes.json"
 
-DEFAULT_MAINTENANCE_MESSAGE = "Website is currently down. Please come back later."
+DEFAULT_MAINTENANCE_MESSAGE = "This website is currently down, come back soon."
 TIMEFRAME_OPTIONS = {"1 week", "2 weeks", "3 weeks", "4 weeks"}
 
 PASSWORD = os.getenv("DASHBOARD_PASSWORD", "change-this-password")

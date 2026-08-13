@@ -48,6 +48,8 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("token")?.value;
 
+  // Dashboard stays reachable so you can turn maintenance off.
+  // Public pages — including a logged-in admin browsing the site — go to the down page.
   if (pathname.startsWith("/dashboard")) {
     if (pathname === DASHBOARD_LOGIN) {
       return NextResponse.next();
@@ -62,16 +64,6 @@ export async function middleware(req: NextRequest) {
       return redirect;
     }
 
-    return NextResponse.next();
-  }
-
-  if (token) {
-    if (pathname === MAINTENANCE_PAGE) {
-      const homeUrl = req.nextUrl.clone();
-      homeUrl.pathname = "/";
-      homeUrl.search = "";
-      return NextResponse.redirect(homeUrl);
-    }
     return NextResponse.next();
   }
 
