@@ -43,7 +43,10 @@ export default function DashboardContextPage() {
   }
 
   return (
-    <DashboardShell title="Context" description="Saved to backend/data/context.md.">
+    <DashboardShell
+      title="Context File"
+      description="Your editable brain file. Changes are saved to backend/data/context.md."
+    >
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
         <div className="flex items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-semibold text-white">context.md</h2>
