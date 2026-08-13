@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { Project, ProjectLink } from "@/components/ProjectCard";
 import {
   addProject,
@@ -92,7 +92,18 @@ export default function DashboardProjectsPage() {
     "Backend",
     "Tools",
   ]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [listFilter, setListFilter] = useState<"active" | "draft" | "finished">("active");
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      if (listFilter === "active") return project.status !== "finished";
+      if (listFilter === "draft") return (project.visibility ?? "draft") === "draft";
+      return project.status === "finished";
+    });
+  }, [projects, listFilter]);
 
   function updateLink(idx: number, field: keyof ProjectLink, value: string) {
     setLinks((prev) => prev.map((l, i) => (i === idx ? { ...l, [field]: value } : l)));
@@ -153,6 +164,8 @@ export default function DashboardProjectsPage() {
           .filter(Boolean),
       });
       setProjects((prev) => [created, ...prev]);
+      setShowAdd(false);
+      setExpandedId(created.id);
       setTitle("");
       setDescription("");
       setHiddenNotes("");
@@ -201,6 +214,7 @@ export default function DashboardProjectsPage() {
     try {
       await deleteProject(projectId);
       setProjects((prev) => prev.filter((project) => project.id !== projectId));
+      setExpandedId((current) => (current === projectId ? null : current));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to delete project";
       setError(msg);
@@ -208,21 +222,41 @@ export default function DashboardProjectsPage() {
   }
 
   return (
-    <DashboardShell
-      title="Project Manager"
-      description="Live admin surface for adding projects and managing project statuses."
-    >
+    <DashboardShell title="Projects" description="List first. Expand a row to edit.">
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
           {error}
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-6">
-        {/* ── Add Project Form ─────────────────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 self-start">
-          <h2 className="text-xl font-semibold text-white">Add project</h2>
-          <form className="mt-5 space-y-3" onSubmit={onAddProject}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+          {(["active", "draft", "finished"] as const).map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setListFilter(filter)}
+              className={`rounded-md px-3 py-1.5 text-sm capitalize ${
+                listFilter === filter ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAdd((prev) => !prev)}
+          className="rounded-lg bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400"
+        >
+          {showAdd ? "Cancel" : "Add project"}
+        </button>
+      </div>
+
+      {showAdd ? (
+        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+          <h2 className="text-lg font-semibold text-white">New project</h2>
+          <form className="mt-4 space-y-3" onSubmit={onAddProject}>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -461,40 +495,65 @@ export default function DashboardProjectsPage() {
             </button>
           </form>
         </div>
+      ) : null}
 
-        {/* ── Tracked Projects ──────────────────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <h2 className="text-xl font-semibold text-white">Tracked projects</h2>
-            <span className="text-sm text-zinc-500">{projects.length} total</span>
-          </div>
-          {loading ? <p className="mb-4 text-zinc-500">Loading projects...</p> : null}
-          <div className="space-y-4">
-            {projects.map((project) => {
-              const missingProgress = !project.progress || project.progress === 0;
-              const missingImage = !project.image;
-              return (
-                <div
-                  key={project.id}
-                  className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 space-y-3"
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-white">
+            {filteredProjects.length} {listFilter}
+          </h2>
+          <span className="text-xs text-zinc-500">{projects.length} total</span>
+        </div>
+        {loading ? <p className="mb-4 text-sm text-zinc-500">Loading projects...</p> : null}
+        <div className="space-y-2">
+          {filteredProjects.map((project) => {
+            const missingProgress = !project.progress || project.progress === 0;
+            const missingImage = !project.image;
+            const expanded = expandedId === project.id;
+            const pct = project.progress ?? 0;
+            return (
+              <div
+                key={project.id}
+                className="rounded-xl border border-zinc-800 bg-zinc-950"
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(expanded ? null : project.id)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left"
                 >
-                  {/* Warnings */}
-                  {(missingProgress || missingImage) && (
-                    <div className="flex flex-wrap gap-2">
-                      {missingProgress && (
-                        <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-300">
-                          ⚠ Add a completion percentage for this project
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-white">{project.title}</p>
+                      {(missingProgress || missingImage) ? (
+                        <span
+                          className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-300"
+                          title={[
+                            missingProgress ? "Missing progress" : "",
+                            missingImage ? "Missing image" : "",
+                          ].filter(Boolean).join(" · ")}
+                        >
+                          !
                         </span>
-                      )}
-                      {missingImage && (
-                        <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-300">
-                          ⚠ Add a background picture for this project
-                        </span>
-                      )}
+                      ) : null}
                     </div>
-                  )}
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {project.category} · {project.status} · {project.visibility === "draft" ? "Draft" : "Public"}
+                    </p>
+                  </div>
+                  <div className="hidden w-28 shrink-0 sm:block">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                      <div
+                        className={`h-full rounded-full ${progressColor(pct)}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="mt-1 text-right text-[10px] text-zinc-500">{pct}%</p>
+                  </div>
+                  <span className="text-xs text-zinc-500">{expanded ? "Hide" : "Edit"}</span>
+                </button>
 
-                  {/* Header row */}
+                {expanded ? (
+                <div className="space-y-3 border-t border-zinc-800 px-4 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-white font-semibold text-sm">{project.title}</p>
@@ -722,9 +781,13 @@ export default function DashboardProjectsPage() {
                     onSave={(newLinks) => void onFieldUpdate(project.id, { links: newLinks })}
                   />
                 </div>
-              );
-            })}
-          </div>
+                ) : null}
+              </div>
+            );
+          })}
+          {!loading && filteredProjects.length === 0 ? (
+            <p className="px-1 py-4 text-sm text-zinc-500">No projects in this filter.</p>
+          ) : null}
         </div>
       </div>
     </DashboardShell>
