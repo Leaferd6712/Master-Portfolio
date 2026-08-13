@@ -105,6 +105,86 @@ function reorderTaskList(prev: Task[], activeId: string, overId: string): Task[]
   return next;
 }
 
+function reorderAllTasks(prev: Task[], activeId: string, overId: string): Task[] {
+  if (activeId === overId) return prev;
+
+  const oldIndex = prev.findIndex((task) => task.id === activeId);
+  const newIndex = prev.findIndex((task) => task.id === overId);
+
+  if (oldIndex < 0 || newIndex < 0) return prev;
+  return arrayMove(prev, oldIndex, newIndex);
+}
+
+function SortableListTaskCard({
+  task,
+  projectTitle,
+  notesValue,
+  onNotesChange,
+  onNotesBlur,
+}: {
+  task: Task;
+  projectTitle?: string;
+  notesValue: string;
+  onNotesChange: (taskId: string, value: string) => void;
+  onNotesBlur: (taskId: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-medium text-white">{task.title}</p>
+          <p className="mt-2 text-xs text-zinc-500">
+            {task.category} · {task.priority} priority · {task.month}
+          </p>
+          <p className="mt-1 text-xs text-emerald-300">Sprint: {task.timeframe}</p>
+          {task.projectId ? (
+            <p className="mt-1 text-[11px] text-sky-300">
+              {projectTitle ?? "Linked project task"}
+            </p>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200"
+          title="Drag to reorder"
+          aria-label="Drag to reorder"
+        >
+          Drag
+        </button>
+      </div>
+      <div className="mt-3">
+        <TaskStatusBadge status={task.status} />
+      </div>
+      <label htmlFor={`notes-${task.id}`} className="mb-1 mt-4 block text-xs text-zinc-500">
+        Notes
+      </label>
+      <textarea
+        id={`notes-${task.id}`}
+        value={notesValue}
+        onChange={(e) => onNotesChange(task.id, e.target.value)}
+        onBlur={() => onNotesBlur(task.id)}
+        placeholder="Add notes for this task..."
+        className="min-h-20 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
+      />
+    </div>
+  );
+}
+
 function SortableTaskCard({
   task,
   onMoveTask,
@@ -300,6 +380,11 @@ export default function DashboardTasksPage() {
   const [timeframe, setTimeframe] = useState<TimeframeOption>("2 weeks");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"board" | "list">("board");
+  const [showAdd, setShowAdd] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | Task["status"]>("all");
+  const [projectFilter, setProjectFilter] = useState("all");
+  const [notesDrafts, setNotesDrafts] = useState<Record<string, string>>({});
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const tasksByColumn = useMemo(() => {
@@ -316,6 +401,27 @@ export default function DashboardTasksPage() {
       }
     );
   }, [tasks]);
+
+  const projectById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project])),
+    [projects]
+  );
+
+  const filteredListTasks = useMemo(
+    () =>
+      tasks.filter((task) => {
+        if (statusFilter !== "all" && task.status !== statusFilter) return false;
+        if (projectFilter !== "all" && task.projectId !== projectFilter) return false;
+        return true;
+      }),
+    [tasks, statusFilter, projectFilter]
+  );
+
+  function setViewAndUrl(next: "board" | "list") {
+    setView(next);
+    const url = next === "list" ? "/dashboard/tasks?view=list" : "/dashboard/tasks";
+    window.history.replaceState(null, "", url);
+  }
 
   async function persistTaskOrder(nextTasks: Task[]) {
     try {
@@ -335,6 +441,12 @@ export default function DashboardTasksPage() {
         const [taskData, projectData] = await Promise.all([getTasks(), getProjects()]);
         setTasks(taskData);
         setProjects(projectData);
+        setNotesDrafts(
+          taskData.reduce<Record<string, string>>((acc, task) => {
+            acc[task.id] = task.notes ?? "";
+            return acc;
+          }, {})
+        );
         if (projectData.length > 0) {
           setProjectId(projectData[0].id);
           setCategory(projectData[0].category || "General");
@@ -348,6 +460,13 @@ export default function DashboardTasksPage() {
     }
 
     void load();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("view") === "list") {
+      setView("list");
+    }
   }, []);
 
   async function onCreateTask(e: FormEvent<HTMLFormElement>) {
@@ -375,8 +494,10 @@ export default function DashboardTasksPage() {
         timeframe,
       });
       setTasks((prev) => [...prev, created]);
+      setNotesDrafts((prev) => ({ ...prev, [created.id]: created.notes ?? "" }));
       setTitle("");
       setTimeframe("2 weeks");
+      setShowAdd(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to add task";
       setError(msg);
@@ -413,6 +534,25 @@ export default function DashboardTasksPage() {
     }
   }
 
+  function onNotesChange(taskId: string, value: string) {
+    setNotesDrafts((prev) => ({ ...prev, [taskId]: value }));
+  }
+
+  async function onNotesBlur(taskId: string) {
+    const draft = notesDrafts[taskId] ?? "";
+    const current = tasks.find((task) => task.id === taskId);
+    if (!current || (current.notes ?? "") === draft) return;
+
+    try {
+      const updated = await updateTask(taskId, { notes: draft });
+      setTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
+      setNotesDrafts((prev) => ({ ...prev, [taskId]: updated.notes ?? "" }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save notes";
+      setError(msg);
+    }
+  }
+
   function onDragEnd(event: DragEndEvent) {
     const activeId = String(event.active.id);
     const overId = event.over ? String(event.over.id) : "";
@@ -422,7 +562,10 @@ export default function DashboardTasksPage() {
     let changed = false;
 
     setTasks((prev) => {
-      const next = reorderTaskList(prev, activeId, overId);
+      const next =
+        view === "list"
+          ? reorderAllTasks(prev, activeId, overId)
+          : reorderTaskList(prev, activeId, overId);
       nextState = next;
       changed = next !== prev;
       return next;
@@ -434,10 +577,7 @@ export default function DashboardTasksPage() {
   }
 
   return (
-    <DashboardShell
-      title="Task Manager"
-      description="Create and edit tasks here. Every task stays linked to a project and is planned in relative sprint intervals."
-    >
+    <DashboardShell title="Tasks" description="Board or list. Linked to a project.">
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
           {error}
@@ -445,104 +585,186 @@ export default function DashboardTasksPage() {
       ) : null}
 
       {projects.length === 0 ? (
-        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-200">
+        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
           <p className="font-medium">Create a project before adding tasks.</p>
-          <p className="mt-1 text-amber-100/90">Tasks now require an existing project link.</p>
           <Link
             href="/dashboard/projects"
-            className="mt-3 inline-flex rounded-lg border border-amber-300/30 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-300/10"
+            className="mt-2 inline-flex text-xs font-semibold text-amber-100 underline underline-offset-2"
           >
             Go to Projects
           </Link>
         </div>
       ) : null}
 
-      <form
-        onSubmit={onCreateTask}
-        className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-4"
-      >
-        <h2 className="mb-3 text-lg font-semibold text-white">New Task</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Task title"
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-white placeholder:text-zinc-500"
-          />
-          <select
-            value={projectId}
-            onChange={(e) => {
-              const nextId = e.target.value;
-              setProjectId(nextId);
-              const selectedProject = projects.find((project) => project.id === nextId);
-              if (selectedProject?.category) setCategory(selectedProject.category);
-            }}
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+          <button
+            type="button"
+            onClick={() => setViewAndUrl("board")}
+            className={`rounded-md px-3 py-1.5 text-sm ${
+              view === "board" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
+            }`}
           >
+            Board
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewAndUrl("list")}
+            className={`rounded-md px-3 py-1.5 text-sm ${
+              view === "list" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            List
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAdd((prev) => !prev)}
+          disabled={projects.length === 0}
+          className="rounded-lg bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400 disabled:opacity-50"
+        >
+          {showAdd ? "Cancel" : "Add task"}
+        </button>
+      </div>
+
+      {showAdd ? (
+        <form
+          onSubmit={onCreateTask}
+          className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+        >
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Task title"
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-white placeholder:text-zinc-500"
+            />
+            <select
+              value={projectId}
+              onChange={(e) => {
+                const nextId = e.target.value;
+                setProjectId(nextId);
+                const selectedProject = projects.find((project) => project.id === nextId);
+                if (selectedProject?.category) setCategory(selectedProject.category);
+              }}
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+            >
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as Task["priority"])}
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+            >
+              <option value="high">High priority</option>
+              <option value="medium">Medium priority</option>
+              <option value="low">Low priority</option>
+            </select>
+            <input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Category"
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+            />
+            <input
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              placeholder="Month"
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+            />
+            <select
+              value={timeframe}
+              onChange={(e) => setTimeframe(e.target.value as TimeframeOption)}
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
+            >
+              {TIMEFRAME_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button
+              type="submit"
+              disabled={projects.length === 0}
+              className="rounded-xl bg-sky-500 px-4 py-2.5 font-semibold text-white hover:bg-sky-400 disabled:opacity-50"
+            >
+              Add to Planned
+            </button>
+          </div>
+        </form>
+      ) : null}
+
+      {loading ? <p className="text-zinc-500">Loading tasks...</p> : null}
+
+      {view === "list" ? (
+        <div className="mb-4 flex flex-wrap gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "all" | Task["status"])}
+            className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200"
+          >
+            <option value="all">All statuses</option>
+            {columns.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200"
+          >
+            <option value="all">All projects</option>
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.title}
               </option>
             ))}
           </select>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as Task["priority"])}
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
-          >
-            <option value="high">High priority</option>
-            <option value="medium">Medium priority</option>
-            <option value="low">Low priority</option>
-          </select>
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="Category"
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
-          />
-          <input
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            placeholder="Month"
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
-          />
-          <select
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value as TimeframeOption)}
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-zinc-200"
-          >
-            {TIMEFRAME_OPTIONS.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-zinc-500">New ideas are added to Planned by default and tracked in sprint blocks.</p>
-          <button
-            type="submit"
-            disabled={projects.length === 0}
-            className="rounded-xl bg-sky-500 px-4 py-2.5 font-semibold text-white hover:bg-sky-400 transition-colors disabled:opacity-50"
-          >
-            Add to Planned
-          </button>
-        </div>
-      </form>
-
-      {loading ? <p className="text-zinc-500">Loading tasks...</p> : null}
+      ) : null}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
-          {columns.map((status) => (
-            <TaskColumn
-              key={status}
-              status={status}
-              items={tasksByColumn[status]}
-              onMoveTask={onMoveTask}
-              onDeleteTask={onDeleteTask}
-              onUpdateTimeframe={onUpdateTimeframe}
-            />
-          ))}
-        </div>
+        {view === "board" ? (
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+            {columns.map((status) => (
+              <TaskColumn
+                key={status}
+                status={status}
+                items={tasksByColumn[status]}
+                onMoveTask={onMoveTask}
+                onDeleteTask={onDeleteTask}
+                onUpdateTimeframe={onUpdateTimeframe}
+              />
+            ))}
+          </div>
+        ) : (
+          <SortableContext
+            items={filteredListTasks.map((task) => task.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-3">
+              {filteredListTasks.map((task) => (
+                <SortableListTaskCard
+                  key={task.id}
+                  task={task}
+                  projectTitle={projectById.get(task.projectId)?.title}
+                  notesValue={notesDrafts[task.id] ?? ""}
+                  onNotesChange={onNotesChange}
+                  onNotesBlur={onNotesBlur}
+                />
+              ))}
+              {!loading && filteredListTasks.length === 0 ? (
+                <p className="text-sm text-zinc-500">No tasks match these filters.</p>
+              ) : null}
+            </div>
+          </SortableContext>
+        )}
       </DndContext>
     </DashboardShell>
   );

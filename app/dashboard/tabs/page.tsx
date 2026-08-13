@@ -112,6 +112,7 @@ export default function DashboardTabsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -137,18 +138,24 @@ export default function DashboardTabsPage() {
   }
 
   function addTopLevelTab() {
+    const nextIndex = tabs.length;
     setTabs((prev) => [...prev, { ...EMPTY_TAB }]);
+    setExpandedKey(String(nextIndex));
     setSuccess(null);
     setError(null);
   }
 
   function addChildTab(path: TabPath) {
-    setTabs((prev) =>
-      updateNodeAtPath(prev, path, (tab) => ({
+    let childIndex = 0;
+    const next = updateNodeAtPath(tabs, path, (tab) => {
+      childIndex = (tab.children ?? []).length;
+      return {
         ...tab,
         children: [...(tab.children ?? []), { ...EMPTY_TAB, showInInterests: false }],
-      }))
-    );
+      };
+    });
+    setTabs(next);
+    setExpandedKey([...path, childIndex].join("."));
     setSuccess(null);
     setError(null);
   }
@@ -196,132 +203,133 @@ export default function DashboardTabsPage() {
   function renderTabEditor(items: SiteTab[], parentPath: TabPath = [], depth = 0): React.ReactNode {
     return items.map((tab, index) => {
       const path = [...parentPath, index];
+      const key = path.join(".");
+      const expanded = expandedKey === key;
       const siblingsCount = items.length;
-      const isTopLevel = depth === 0;
 
       return (
         <div
-          key={`${path.join("-")}-${tab.label}-${tab.href}`}
-          className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5"
-          style={{ marginLeft: depth ? `${depth * 0.5}rem` : undefined }}
+          key={key}
+          className="rounded-xl border border-zinc-800 bg-zinc-950"
+          style={{ marginLeft: depth ? `${depth * 0.75}rem` : undefined }}
         >
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-white">
-                    {isTopLevel ? `Top-level Tab #${index + 1}` : `Subcategory Level ${depth}`}
-                  </h3>
-                  <p className="text-sm text-zinc-500">
-                    {isTopLevel
-                      ? "Controls top navigation and homepage 'What I'm Into' cards."
-                      : "Nested grouping for advanced category organization."}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => moveTab(path, -1)}
-                    disabled={index === 0}
-                    className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-sky-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveTab(path, 1)}
-                    disabled={index === siblingsCount - 1}
-                    className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-sky-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addChildTab(path)}
-                    className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-sm text-sky-200 transition-colors hover:border-sky-500 hover:bg-sky-500/20"
-                  >
-                    + Add subcategory
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeTab(path)}
-                    className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200 transition-colors hover:border-red-500 hover:bg-red-500/20"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+          <div className="flex items-center gap-2 px-3 py-2">
+            <button
+              type="button"
+              onClick={() => setExpandedKey(expanded ? null : key)}
+              className="min-w-0 flex-1 truncate text-left text-sm text-white"
+            >
+              <span className="mr-2">{tab.icon || "•"}</span>
+              {tab.label || "Untitled"}
+              <span className="ml-2 text-xs text-zinc-500">{tab.href}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => moveTab(path, -1)}
+              disabled={index === 0}
+              className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 disabled:opacity-40"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              onClick={() => moveTab(path, 1)}
+              disabled={index === siblingsCount - 1}
+              className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 disabled:opacity-40"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpandedKey(expanded ? null : key)}
+              className="rounded-md px-2 py-1 text-xs text-zinc-400 hover:text-white"
+            >
+              {expanded ? "Hide" : "Edit"}
+            </button>
+          </div>
 
-              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {expanded ? (
+            <div className="space-y-3 border-t border-zinc-800 px-3 py-3">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => addChildTab(path)}
+                  className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-xs text-sky-200"
+                >
+                  + Add subcategory
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeTab(path)}
+                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-200"
+                >
+                  Delete
+                </button>
+              </div>
+              <div className="grid gap-3 lg:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-medium text-zinc-300">Emoji / Icon</span>
+                  <span className="text-xs font-medium text-zinc-400">Emoji / Icon</span>
                   <input
                     value={tab.icon}
                     onChange={(event) => updateTab(path, { icon: event.target.value })}
-                    className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
                     placeholder="e.g. 🤖"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-zinc-300">Title</span>
+                  <span className="text-xs font-medium text-zinc-400">Title</span>
                   <input
                     value={tab.label}
                     onChange={(event) => updateTab(path, { label: event.target.value })}
-                    className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
                     placeholder="AI / ML"
                   />
                 </label>
-                <label className="block">
-                  <span className="text-sm font-medium text-zinc-300">Link (Href)</span>
+                <label className="block lg:col-span-2">
+                  <span className="text-xs font-medium text-zinc-400">Link (Href)</span>
                   <input
                     value={tab.href}
                     onChange={(event) => updateTab(path, { href: event.target.value })}
-                    className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
                     placeholder="/projects?category=AI%20/%20ML"
                   />
                 </label>
                 <label className="block lg:col-span-2">
-                  <span className="text-sm font-medium text-zinc-300">Description</span>
+                  <span className="text-xs font-medium text-zinc-400">Description</span>
                   <input
                     value={tab.desc}
                     onChange={(event) => updateTab(path, { desc: event.target.value })}
-                    className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500"
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
                     placeholder="Describe this tab or subcategory"
                   />
                 </label>
               </div>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <label className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+              <div className="flex flex-wrap gap-3">
+                <label className="inline-flex items-center gap-2 text-sm text-zinc-300">
                   <input
                     type="checkbox"
                     checked={tab.showInNav}
                     onChange={(event) => updateTab(path, { showInNav: event.target.checked })}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-sky-400"
                   />
                   Show in top navigation
                 </label>
-                <label className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+                <label className="inline-flex items-center gap-2 text-sm text-zinc-300">
                   <input
                     type="checkbox"
                     checked={tab.showInInterests}
                     onChange={(event) => updateTab(path, { showInInterests: event.target.checked })}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-sky-400"
                   />
-                  Show in "What I&apos;m Into"
+                  Show in &quot;What I&apos;m Into&quot;
                 </label>
               </div>
-
               {(!tab.label.trim() || !tab.href.trim()) ? (
-                <p className="mt-4 text-sm text-amber-300">
-                  Title and href are required to save this item.
-                </p>
+                <p className="text-xs text-amber-300">Title and href are required to save this item.</p>
               ) : null}
             </div>
-          </div>
+          ) : null}
 
           {tab.children && tab.children.length > 0 ? (
-            <div className="mt-5 border-l border-zinc-800 pl-3">
+            <div className="space-y-2 border-t border-zinc-800 p-2">
               {renderTabEditor(tab.children, path, depth + 1)}
             </div>
           ) : null}
@@ -331,75 +339,54 @@ export default function DashboardTabsPage() {
   }
 
   return (
-    <DashboardShell
-      title="Navigation & Interests CMS"
-      description="Manage top navigation tabs, homepage 'What I'm Into' cards, and multi-level subcategories from one place."
-    >
-      <div className="space-y-6">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-white">Tab & subcategory manager</h2>
-              <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-                Add, edit, remove, and reorder tabs at any depth. Each item supports icon, title,
-                description, and destination link. Changes sync both the top navigation and homepage cards.
-              </p>
-              <p className="mt-2 text-xs text-zinc-500">
-                Starter categories are auto-loaded if your config is empty, so the manager always opens with a usable baseline.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={addTopLevelTab}
-                className="inline-flex items-center justify-center rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-400"
-              >
-                + Add top-level tab
-              </button>
-              <button
-                type="button"
-                onClick={resetToDefaults}
-                className="inline-flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white"
-              >
-                Reset starter tabs
-              </button>
-              <button
-                type="button"
-                onClick={saveTabs}
-                disabled={saving || hasValidationErrors}
-                className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save changes"}
-              </button>
-            </div>
-          </div>
-
-          {loading ? (
-            <p className="mt-6 text-zinc-400">Loading configuration...</p>
-          ) : null}
-
-          {error ? (
-            <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-              {error}
-            </div>
-          ) : null}
-
-          {success ? (
-            <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-              {success}
-            </div>
-          ) : null}
-
-          <div className="mt-6 space-y-5">
-            {tabs.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 p-6 text-zinc-400">
-                No tabs configured yet. Click "Add top-level tab" to create your first one.
-              </div>
-            ) : (
-              renderTabEditor(tabs)
-            )}
-          </div>
+    <DashboardShell title="Nav" description="Top nav, interests cards, and subcategories.">
+      <div className="sticky top-4 z-10 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/95 p-3 backdrop-blur">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={addTopLevelTab}
+            className="rounded-lg bg-sky-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-400"
+          >
+            Add tab
+          </button>
+          <button
+            type="button"
+            onClick={resetToDefaults}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:text-white"
+          >
+            Reset starter tabs
+          </button>
         </div>
+        <button
+          type="button"
+          onClick={saveTabs}
+          disabled={saving || hasValidationErrors}
+          className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save changes"}
+        </button>
+      </div>
+
+      {loading ? <p className="mb-4 text-sm text-zinc-400">Loading...</p> : null}
+      {error ? (
+        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+          {error}
+        </div>
+      ) : null}
+      {success ? (
+        <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+          {success}
+        </div>
+      ) : null}
+
+      <div className="space-y-2">
+        {tabs.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-zinc-700 p-6 text-sm text-zinc-400">
+            No tabs yet.
+          </div>
+        ) : (
+          renderTabEditor(tabs)
+        )}
       </div>
     </DashboardShell>
   );

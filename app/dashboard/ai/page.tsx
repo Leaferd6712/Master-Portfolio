@@ -54,10 +54,7 @@ export default function DashboardAIPage() {
   }
 
   return (
-    <DashboardShell
-      title="AI Planning Panel"
-      description="Powered by LM Studio — your local AI model, running privately on your machine."
-    >
+    <DashboardShell title="AI" description="Local LM Studio model.">
       <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
           <h2 className="text-lg font-semibold text-white">Suggested prompts</h2>

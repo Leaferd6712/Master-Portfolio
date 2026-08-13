@@ -95,13 +95,22 @@ export default function DashboardRoadmapPage() {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [openMonths, setOpenMonths] = useState<Partial<Record<MonthName, boolean>>>({});
   const hydratedRef = useRef(false);
+  const currentMonth = new Date().toLocaleString("en-US", { month: "long" }) as MonthName;
 
   useEffect(() => {
     async function load() {
       try {
         const data = await getRoadmap();
-        setMonthNotes(parseRoadmapContent(data));
+        const parsed = parseRoadmapContent(data);
+        setMonthNotes(parsed);
+        setOpenMonths(
+          months.reduce<Partial<Record<MonthName, boolean>>>((acc, month) => {
+            acc[month] = month === currentMonth || Boolean(parsed[month].trim());
+            return acc;
+          }, {})
+        );
         hydratedRef.current = true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load roadmap";
@@ -112,7 +121,7 @@ export default function DashboardRoadmapPage() {
     }
 
     void load();
-  }, []);
+  }, [currentMonth]);
 
   useEffect(() => {
     if (loading || !hydratedRef.current || !dirty) {
@@ -159,10 +168,7 @@ export default function DashboardRoadmapPage() {
   }
 
   return (
-    <DashboardShell
-      title="2026 Roadmap"
-      description="General roadmap notes, completely separate from tasks."
-    >
+    <DashboardShell title="Roadmap" description="High-level notes by month. Separate from tasks.">
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
           {error}
@@ -171,30 +177,48 @@ export default function DashboardRoadmapPage() {
 
       {loading ? <p className="mb-4 text-zinc-500">Loading roadmap...</p> : null}
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-        <p className="text-sm text-zinc-400">
-          Keep your high-level roadmap here by month. These notes are not linked to task items.
-        </p>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {months.map((month) => (
-            <div key={month} className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
-              <h2 className="mb-2 text-sm font-semibold text-white">{month}</h2>
-              <textarea
-                value={monthNotes[month]}
-                onChange={(e) => {
-                  const nextValue = e.target.value;
-                  setDirty(true);
-                  setMessage("Unsaved changes...");
-                  setMonthNotes((prev) => ({ ...prev, [month]: nextValue }));
-                }}
-                disabled={loading}
-                placeholder={`Add ${month} roadmap...`}
-                className="min-h-[110px] w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2.5 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
-              />
+      <div className="space-y-3">
+        {[currentMonth, ...months.filter((month) => month !== currentMonth)].map((month) => {
+          const isOpen = Boolean(openMonths[month]);
+          const isCurrent = month === currentMonth;
+          return (
+            <div
+              key={month}
+              className={`rounded-xl border bg-zinc-950 p-3 ${
+                isCurrent ? "border-sky-500/40" : "border-zinc-800"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenMonths((prev) => ({ ...prev, [month]: !prev[month] }))
+                }
+                className="flex w-full items-center justify-between text-left"
+              >
+                <h2 className="text-sm font-semibold text-white">
+                  {month}
+                  {isCurrent ? <span className="ml-2 text-xs font-normal text-sky-400">This month</span> : null}
+                </h2>
+                <span className="text-xs text-zinc-500">{isOpen ? "Hide" : "Show"}</span>
+              </button>
+              {isOpen ? (
+                <textarea
+                  value={monthNotes[month]}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    setDirty(true);
+                    setMessage("Unsaved changes...");
+                    setMonthNotes((prev) => ({ ...prev, [month]: nextValue }));
+                  }}
+                  disabled={loading}
+                  placeholder={`Add ${month} roadmap...`}
+                  className="mt-2 min-h-[110px] w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2.5 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
+                />
+              ) : null}
             </div>
-          ))}
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
+          );
+        })}
+        <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-zinc-500">{message || ""}</p>
           <button
             type="button"
@@ -209,3 +233,4 @@ export default function DashboardRoadmapPage() {
     </DashboardShell>
   );
 }
+
