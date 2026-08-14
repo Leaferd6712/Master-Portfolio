@@ -180,10 +180,11 @@ Leave this running.
 - Used by AI panel for context when suggesting work
 
 #### AI Panel (`/dashboard/ai`)
+- **Local AI**: Chat with LM Studio (`qwen2.5-coder-3b` on port 1234) via `POST /api/ai/chat`
+- **Gemini AI** (below local): Chat with `gemini-3.6-flash` via `POST /api/ai/gemini`
+- **Gemini API key**: Password field on that section (sessionStorage) or `GEMINI_API_KEY` in `.env.local` / Vercel
 - **Suggested prompts**: Quick-start buttons (Break into tasks, What's next, etc.)
-- **Chat**: Type messages in textarea
-- **Send**: Get AI responses that reference your tasks/roadmap
-- **Note**: Currently returns planning suggestions; if you wire a real LLM, it gives smarter responses
+- Both chats use portfolio context (context.md, projects, tasks) and stay independent
 
 #### Logout
 - Bottom left of dashboard: "Logout" button clears session and redirects to login
@@ -205,14 +206,13 @@ The current AI endpoint in the dashboard returns static suggestions. If you want
 
 **Cost**: Pay-as-you-go. ~$0.01–$0.05 per chat request depending on model.
 
-### Option 2: Google Gemini
-1. Go to [ai.google.dev](https://ai.google.dev)
-2. Click **Get API key**
-3. Click **Create API key in new project**
-4. Copy the key
-5. Save it
+### Option 2: Google Gemini (dashboard Gemini AI section)
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Create an API key (use a new **auth key** from AI Studio)
+3. Paste it in **Dashboard → AI → Gemini AI**, or set `GEMINI_API_KEY` in `.env.local` and on Vercel
+4. Model is `gemini-3.6-flash` (not Gemini 2.5 — that family shuts down 16 Oct 2026)
 
-**Cost**: Free tier available (60 requests/minute). Paid plans start at $0.075/1M tokens.
+**Cost**: Free tier available. The key is sent only to your Next.js `/api/ai/gemini` route, never committed.
 
 ### Option 3: Groq (Fast & Free)
 1. Go to [console.groq.com](https://console.groq.com)

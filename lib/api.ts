@@ -274,6 +274,19 @@ export async function sendChatMessage(
   return readJson<{ reply: string }>(res);
 }
 
+export async function sendGeminiChatMessage(
+  message: string,
+  history: ChatMessage[] = [],
+  apiKey = ""
+): Promise<{ reply: string }> {
+  const res = await fetch("/api/ai/gemini", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, history, apiKey }),
+  });
+  return readJson<{ reply: string }>(res);
+}
+
 // ── Maintenance ──────────────────────────────────────────────────────────────
 
 export async function getMaintenanceMode(): Promise<MaintenanceMode> {
