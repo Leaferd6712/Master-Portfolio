@@ -16,7 +16,8 @@ You do **not** need `npm run dev` to use the live site. You **do** need FastAPI,
 | LocalAI (`LocalAI/server.js`) | 3000 | Node proxy. ngrok must point here. `/backend/*` → FastAPI, `/v1/*` → LM Studio. |
 | ngrok | tunnels 3000 | Public HTTPS URL that Vercel calls. |
 | Vercel | — | Hosts the Next.js site. `BACKEND_API_URL` must include `/backend`. |
-| LM Studio (optional, AI chat) | 1234 | Local model server. |
+| LM Studio (optional, local AI chat) | 1234 | Local model server for `/dashboard/ai` Local AI. |
+| Gemini API (optional) | — | Cloud chat in `/dashboard/ai` Gemini AI. Uses `GEMINI_API_KEY` or a key pasted in the dashboard. |
 
 `.next` is a local Next.js cache. Ignore it. Vercel builds its own copy. It is not required for this deploy path.
 
@@ -28,6 +29,8 @@ In Vercel → Project → Settings → Environment Variables:
 | --- | --- |
 | `BACKEND_API_URL` | `https://<your-ngrok-host>/backend` (no trailing slash) |
 | `NGROK_SKIP_BROWSER_WARNING` | `1` |
+| `GEMINI_API_KEY` | Optional. Google AI Studio key for the Gemini AI section. |
+| `GEMINI_MODEL` | Optional. Default `gemini-3.6-flash`. Allowlist: `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.1-flash-lite`. |
 
 Current host used on this project:
 
@@ -37,7 +40,7 @@ Use **exactly** the hostname ngrok prints under **Forwarding**. Free ngrok domai
 
 ## Every time you want the live site to work
 
-Keep **four terminals** open (LM Studio only if you need AI chat).
+Keep **four terminals** open (LM Studio only if you need **Local AI** chat. Gemini AI uses Google’s API instead).
 
 ### Terminal 1 — FastAPI
 
@@ -54,9 +57,9 @@ Check: [http://127.0.0.1:8000/](http://127.0.0.1:8000/) should return:
 
 If `uvicorn` is not on PATH, keep using `python -m uvicorn`. Dashboard password is `DASHBOARD_PASSWORD` in `backend/.env`.
 
-### Terminal 2 — LM Studio (AI chat only)
+### Terminal 2 — LM Studio (Local AI chat only)
 
-Open LM Studio, load a model, start the local server on port 1234.
+Open LM Studio, load a model, start the local server on port 1234. Skip this if you only use **Gemini AI** on `/dashboard/ai`.
 
 ### Terminal 3 — Node proxy (required before ngrok)
 
@@ -112,4 +115,4 @@ Open [http://localhost:3000](http://localhost:3000). `.env.local` should have `B
 
 **Wrong TLD** — do not change `.dev` to `.app` (or the reverse) unless ngrok’s Forwarding line says so.
 
-**AI chat 502** — LM Studio is not running on 1234. Unrelated to FastAPI.
+**Local AI chat 502** — LM Studio is not running on 1234. Unrelated to FastAPI. Gemini AI does not need LM Studio.
