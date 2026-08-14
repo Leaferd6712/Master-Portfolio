@@ -1,105 +1,71 @@
 # Workspace Context — LocalAI
 
-This file summarizes the current LocalAI project state, how to run it locally, how to expose the backend with ngrok, and how to host the frontend on Vercel while using a single ngrok tunnel.
+Express proxy on **port 3000**. The live Vercel site reaches this laptop through **ngrok → this process**, which then forwards to FastAPI and LM Studio.
 
----
+Canonical laptop steps: repo `README.md` and `main.md`. This project does **not** use Railway.
 
 ## Project files
 
-- `server.js` — Express server that proxies chat requests to a local LM at `http://127.0.0.1:1234/v1/chat/completions`. It now binds to `0.0.0.0` by default (reads `HOST` env var) and listens on port `3000`.
-- `public/index.html` — Simple frontend UI. It posts JSON `{ message }` to `/api/chat`. Client-side code was updated to show a "Sending..." indicator, surface errors, and disable the Send button while awaiting responses.
+- `server.js` — Express on `0.0.0.0:3000` (override with `HOST` / `PORT`).
+- `public/index.html` — Optional local chat UI posting to `/api/chat`.
 - `WORKSPACE_CONTEXT.md` — This file.
 
-## How the system works
+## Routes
 
-- The browser frontend (served by the Node server or by a static host) sends a POST to `/api/chat` on the server.
-- The Express server forwards the request to the locally-running model endpoint at `127.0.0.1:1234` and returns the model reply to the browser.
-- When using ngrok, the public ngrok URL forwards incoming requests to the local Node server; the Node server still talks to the model on `127.0.0.1`.
+| Path | Upstream |
+| --- | --- |
+| `/backend/*` | FastAPI `http://127.0.0.1:8000` (prefix stripped) |
+| `/v1/*` | LM Studio `http://127.0.0.1:1234` |
+| `POST /api/chat` | LM Studio chat completions |
 
-## Local dev — commands
+Vercel Next.js calls `{BACKEND_API_URL}/auth/login`. Vercel `BACKEND_API_URL` must be:
 
-Start the server (from repository root):
+`https://<ngrok-host>/backend`
+
+Current: `https://prelude-divisible-untoasted.ngrok-free.dev/backend`
+
+## How the live site works
+
+1. FastAPI on **8000**
+2. This proxy on **3000** (`node server.js`) — **must be up before ngrok**
+3. `ngrok http 3000`
+4. Vercel `BACKEND_API_URL` = ngrok HTTPS host + `/backend`
+5. Vercel `NGROK_SKIP_BROWSER_WARNING` = `1`
+
+You do **not** need `npm run dev` for the live site. Do not tunnel port 8000.
+
+## Start
+
 ```powershell
+cd C:\Users\663208\Downloads\Master-Portfolio\LocalAI
+npm install
 node server.js
 ```
 
-Test the API with PowerShell:
-```powershell
-(Invoke-RestMethod -Uri http://localhost:3000/api/chat -Method POST -Body (@{message='Hello'} | ConvertTo-Json) -ContentType 'application/json') | ConvertTo-Json -Depth 5
-```
+You should see the proxy on `http://localhost:3000`.
 
-Or test with curl (Windows); ensure your shell escapes JSON correctly:
+Confirm: http://127.0.0.1:3000/backend → FastAPI `{"status":"ok","service":"portfolio-backend"}`
+
+Optional local chat test:
+
 ```powershell
 curl.exe -s -X POST http://localhost:3000/api/chat -H "Content-Type: application/json" -d "{\"message\":\"Hello\"}"
 ```
 
-## NGROK — single tunnel for remote frontend
+## ngrok
 
-1. Start your local server (see above).
-2. Start ngrok to forward port `3000`:
-```bash
+```powershell
 ngrok http 3000
 ```
-3. Copy the HTTPS forwarding URL (e.g. `https://abcd-1234.ngrok.io`).
-4. Use that URL as the backend base URL in your frontend app (see CORS and auth notes below). Example API path: `https://abcd-1234.ngrok.io/api/chat`.
 
-Notes:
-- One ngrok tunnel is sufficient — Vercel-hosted frontend will call the ngrok URL directly.
-- Free ngrok URLs rotate after restart; use paid reserved subdomain for a stable URL.
+Use the **Forwarding** HTTPS host exactly (`.ngrok-free.dev` and `.ngrok-free.app` are different). Do not invent a suffix.
 
-## Vercel deployment flow
+## CORS / HTTPS
 
-1. Push your frontend code to GitHub.
-2. Deploy to Vercel from that repo.
-3. Configure an environment variable on Vercel (e.g. `NEXT_PUBLIC_API_URL`) with your current ngrok HTTPS URL so the deployed site will call the tunnel.
-
-## CORS and HTTPS
-
-- Because Vercel serves over HTTPS, use ngrok's HTTPS forwarding URL to avoid mixed-content errors.
-- Add CORS in `server.js` to allow your Vercel origin, or use a permissive `*` origin for quick testing (not recommended for production).
-
-Example CORS middleware (install `cors`):
-```js
-const cors = require('cors');
-app.use(cors({ origin: 'https://your-vercel-domain.vercel.app' }));
-```
-
-## Recommended basic auth / API key (security)
-
-Add a lightweight API key check before `/api/chat` to prevent public abuse.
-
-Example (in `server.js`):
-```js
-app.use((req, res, next) => {
-  const key = req.get('x-api-key');
-  if (!key || key !== process.env.API_KEY) return res.status(401).send('Unauthorized');
-  next();
-});
-```
-
-Then set `API_KEY` locally and include header `x-api-key` in fetch requests from your frontend.
-
-## Firewall on Windows (if exposing to LAN)
-
-Allow port 3000 through Windows firewall (example PowerShell):
-```powershell
-netsh advfirewall firewall add rule name="LocalAI 3000" dir=in action=allow protocol=TCP localport=3000
-```
-
-## Environment variables recommended
-
-- `HOST` — (optional) hostname to bind the Node server. Defaults to `0.0.0.0`.
-- `API_KEY` — secret string used by the server to authorize incoming requests.
+Vercel talks to ngrok from its servers (Next `/api/*`), not from the browser to FastAPI. Still use the ngrok **HTTPS** URL. `server.js` already sends permissive CORS headers.
 
 ## Troubleshooting
 
-- If the frontend reports a CORS error, ensure `server.js` uses `cors()` with the correct origin and that you are using the ngrok HTTPS URL.
-- If your ngrok URL returns 502/404, confirm your Node server is running and listening on port 3000 and that ngrok is connected.
-- If the server returns an error when contacting the model, verify the model process is running on `127.0.0.1:1234` and check its logs.
-
----
-
-If you want, I can:
-- Add the `cors` + `API_KEY` middleware to `server.js` now.
-- Generate a small README with deploy steps to Vercel including env var examples.
-- Add a tiny `.env.example` file to the repo.
+- **ERR_NGROK_8012** — ngrok reached the laptop; nothing on 3000. Start `node server.js`.
+- **502 on Vercel** — proxy, FastAPI, or ngrok down, or Vercel still has an old host / missing `/backend`.
+- **AI errors** — LM Studio must be on `127.0.0.1:1234`.

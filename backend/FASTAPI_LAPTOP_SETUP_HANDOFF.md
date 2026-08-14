@@ -2,6 +2,8 @@
 
 Prepared so someone else can finish setup, connect the frontend, and run the backend locally.
 
+Live site (Vercel) does **not** call this port directly. Production path: ngrok → LocalAI `:3000` `/backend` → this FastAPI `:8000`. Full steps: repo `README.md` and `main.md`. No Railway.
+
 ## 1) What is already working
 
 - Python 3.12.x is installed.
@@ -58,14 +60,11 @@ If `uvicorn` is not found as command, continue with `python -m uvicorn ...`.
 
 ## 7) Frontend connection details
 
-Current app uses Next.js route handlers (`/app/api/*`) that proxy to backend.
+**Local Next.js** (`npm run dev`): `.env.local` `BACKEND_API_URL=http://127.0.0.1:8000` (no `/backend`). Conflicts with LocalAI because both want port 3000.
 
-- Backend base URL is read from env in `app/api/_lib/backend.ts`.
-- Default fallback is `http://localhost:8000`.
-- For this laptop local run, set:
-  - `BACKEND_API_URL=http://127.0.0.1:8000`
+**Live Vercel site**: Next `/app/api/*` on Vercel fetches `BACKEND_API_URL` which must be the ngrok host **plus `/backend`**, e.g. `https://prelude-divisible-untoasted.ngrok-free.dev/backend`. LocalAI strips `/backend` and forwards here.
 
-Direct fetch example (only if bypassing Next proxy):
+Direct fetch example (only if bypassing the proxy):
 
 ```ts
 fetch("http://127.0.0.1:8000/projects")
@@ -97,12 +96,13 @@ app.add_middleware(
 
 ## 9) Quick troubleshooting
 
-- If browser opens `http://127.0.0.1:8000/`, backend is running.
+- If browser opens `http://127.0.0.1:8000/` and shows `portfolio-backend`, FastAPI is running.
+- That is **not** enough for the live Vercel site. Also start `LocalAI` `node server.js` on 3000 and `ngrok http 3000`.
+- **ERR_NGROK_8012**: nothing on 3000.
+- **502 on Vercel**: cannot reach ngrok `/backend` (proxy/ngrok/URL).
 - If `uvicorn` command fails, use `python -m uvicorn`.
 - If venv keeps failing, leave it and use user Python.
-- Same-machine frontend/backend: localhost or 127.0.0.1 are both fine.
-- Other-device access: use LAN IP, tunnel, or deployment URL.
 
 ## 10) One-line summary
 
-Keep backend local and stable first, skip broken venv, run with `python -m uvicorn`, verify API in browser, then connect frontend and test end-to-end.
+Skip broken venv, run FastAPI with `python -m uvicorn` on 8000, then LocalAI on 3000 + ngrok 3000 for the live site.

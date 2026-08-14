@@ -1,10 +1,9 @@
 # FULL INSTRUCTIONS: Portfolio System Setup & Deployment
 
-> **Last Updated**: April 27, 2026  
-> **Status**: Production-ready. Backend + Frontend fully wired with auth, CRUD, and AI integration.
+> **Last Updated**: August 14, 2026  
+> **Status**: Live frontend on Vercel. Backend stays on the laptop, reached through ngrok + LocalAI (port 3000). **This project does not use Railway.**
 
-Before any AI or person reads this, know that this context is very much outdated, only providing some correct information, please ask the owner of this project for more info.
-
+Canonical run/deploy steps: `README.md` and `main.md`. This file still has older planning notes further down; ignore Railway / `NEXT_PUBLIC_API_URL` there.
 
 ---
 
@@ -13,11 +12,10 @@ Before any AI or person reads this, know that this context is very much outdated
 2. [First-Time Local Setup](#first-time-local-setup)
 3. [How to Use the App](#how-to-use-the-app)
 4. [Getting an AI API Key](#getting-an-ai-api-key)
-5. [Deploy Backend on Railway](#deploy-backend-on-railway)
-6. [Deploy Frontend on Vercel](#deploy-frontend-on-vercel)
-7. [Post-Deploy Testing](#post-deploy-testing)
-8. [Personalization](#personalization)
-9. [Troubleshooting](#troubleshooting)
+5. [Live Site: Vercel + ngrok + LocalAI](#live-site-vercel--ngrok--localai)
+6. [Post-Deploy Testing](#post-deploy-testing)
+7. [Personalization](#personalization)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -110,19 +108,11 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 
 Leave this running.
 
-### Step 5: Start Frontend (Terminal 2)
-In a new terminal, from the project root:
-```bash
-npm run dev
-```
+### Step 5: Two ways to run
 
-You should see:
-```
-> Local:        http://localhost:3000
-```
+**A — Live Vercel site (normal).** Do **not** run `npm run dev`. Start FastAPI (already running), then LocalAI on 3000, then `ngrok http 3000`. See [Live Site](#live-site-vercel--ngrok--localai).
 
-### Step 6: Open in Browser
-Go to **http://localhost:3000** in your web browser. You should see your portfolio home page.
+**B — Local Next.js only.** From repo root: `npm run dev` and open http://localhost:3000. Set `.env.local` to `BACKEND_API_URL=http://127.0.0.1:8000` (no `/backend`). This uses port 3000, so you cannot run `LocalAI/server.js` at the same time.
 
 ---
 
@@ -211,7 +201,7 @@ The current AI endpoint in the dashboard returns static suggestions. If you want
 3. Click **API keys** in left menu
 4. Click **Create new secret key**
 5. Copy the key (starts with `sk-`)
-6. Save it (you'll need it during Railway setup)
+6. Save it if you use a cloud LLM; live AI chat currently uses LM Studio on port 1234.
 
 **Cost**: Pay-as-you-go. ~$0.01–$0.05 per chat request depending on model.
 
@@ -235,106 +225,63 @@ The current AI endpoint in the dashboard returns static suggestions. If you want
 **Cost**: Free (generous free tier). Fastest inference of all three.
 
 ### Store Your Key for Later
-Save this somewhere safe (e.g., a password manager or note app). You'll add it to Railway environment variables later.
+Save this somewhere safe if you switch off LM Studio. The live path today is LocalAI → LM Studio on `127.0.0.1:1234`.
 
 ---
 
-## Deploy Backend on Railway
+## Live Site: Vercel + ngrok + LocalAI
 
-### Step 1: Push Code to GitHub
-```bash
-cd path/to/master-portfolio
-git init
-git add .
-git commit -m "Initial portfolio commit"
+This is the working production path. **No Railway.** You do **not** need `npm run dev` on the laptop for the live site.
+
+**Browser → Vercel `/api/*` → `BACKEND_API_URL` (ngrok + `/backend`) → LocalAI Node :3000 → FastAPI :8000**
+
+Live frontend: https://mathias-master-portfolio.vercel.app
+
+### Vercel env vars
+
+| Name | Value |
+| --- | --- |
+| `BACKEND_API_URL` | `https://prelude-divisible-untoasted.ngrok-free.dev/backend` (no trailing slash) |
+| `NGROK_SKIP_BROWSER_WARNING` | `1` |
+
+Use the exact host ngrok prints (`.dev` vs `.app` are different). Redeploy after changing env.
+
+### Every session — four processes
+
+**Terminal 1 — FastAPI**
+
+```powershell
+cd C:\Users\663208\Downloads\Master-Portfolio\backend
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-Then on [github.com](https://github.com):
-1. Create a new public or private repository
-2. Push your local code to GitHub (follow GitHub's instructions)
+Confirm http://127.0.0.1:8000/ returns `{"status":"ok","service":"portfolio-backend"}`.
 
-### Step 2: Create Railway Account
-1. Go to [railway.app](https://railway.app)
-2. Click **Sign up** (use GitHub for easy login)
-3. Complete onboarding
+**Terminal 2 — LM Studio (AI chat only)**  
+Start the local server on port 1234.
 
-### Step 3: Create Backend Service on Railway
-1. In Railway dashboard, click **New Project**
-2. Select **Deploy from GitHub repo**
-3. Choose your portfolio repository
-4. Click **Connect**
+**Terminal 3 — Node proxy (required before ngrok)**
 
-### Step 4: Configure Backend Settings
-Railway will auto-detect and show the root directory. You need to change it:
-1. Click **Settings** for your deployment
-2. Find **Root Directory**
-3. Change from root to: `backend`
-4. Click **Save**
-
-### Step 5: Set Build & Start Commands
-1. In project settings, find **Build Command**
-   - Set to: `pip install -r requirements.txt`
-2. Find **Start Command**
-   - Set to: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-### Step 6: Add Environment Variables
-1. Click the **Variables** tab
-2. Add each variable:
-   - **DASHBOARD_PASSWORD**: Your strong password
-   - **PORT**: `8000`
-   - **CORS_ORIGINS**: `https://your-frontend-domain.vercel.app,http://localhost:3000`
-     - (You'll update this after deploying frontend)
-   - **AI_API_KEY** (optional): Your OpenAI/Gemini/Groq key if you want real AI
-
-3. Click **Deploy**
-
-### Step 7: Get Your Backend URL
-After deployment completes:
-1. Click your project
-2. Look for **Deployment** or **Domain** tab
-3. Copy the URL (looks like `https://your-backend-xyz.up.railway.app`)
-4. Save this URL — you need it for Vercel
-
----
-
-## Deploy Frontend on Vercel
-
-### Step 1: Create Vercel Account
-1. Go to [vercel.com](https://vercel.com)
-2. Click **Sign up** (use GitHub for easy login)
-3. Complete onboarding
-
-### Step 2: Import GitHub Repository
-1. In Vercel dashboard, click **Add New** → **Project**
-2. Click **Import Git Repository**
-3. Find your portfolio repo and click **Import**
-
-### Step 3: Configure Project Settings
-1. **Framework**: Next.js (auto-detected)
-2. **Root Directory**: Leave empty (it's at repo root)
-3. Click **Configure**
-
-### Step 4: Add Environment Variables
-1. Before deploying, go to **Environment Variables**
-2. Add:
-   - **Name**: `BACKEND_API_URL`
-   - **Value**: Your Railway backend URL from Step 7 above (e.g., `https://your-backend-xyz.up.railway.app`)
-3. Click **Add**
-4. Click **Deploy**
-
-Vercel will build and deploy. This takes ~2–3 minutes.
-
-### Step 5: Get Your Frontend URL
-After deployment:
-1. Click your project
-2. Copy the **Production** domain (looks like `your-portfolio-abc.vercel.app`)
-3. Save this URL
-
-### Step 6: Update Railway CORS
-Go back to Railway and update **CORS_ORIGINS** to include your Vercel domain:
+```powershell
+cd C:\Users\663208\Downloads\Master-Portfolio\LocalAI
+npm install
+node server.js
 ```
-https://your-portfolio-abc.vercel.app,http://localhost:3000
+
+- `/backend/*` → FastAPI 8000  
+- `/v1/*` → LM Studio 1234  
+
+Confirm http://127.0.0.1:3000/backend returns the same JSON.
+
+**Terminal 4 — ngrok**
+
+```powershell
+ngrok http 3000
 ```
+
+Tunnel **3000**, not 8000. Confirm https://prelude-divisible-untoasted.ngrok-free.dev/backend shows the FastAPI JSON.
+
+`.next` is a local Next cache. Ignore it. Vercel builds its own.
 
 ---
 
@@ -495,17 +442,17 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8000
 
 If `uvicorn` command is not recognized, continue using `python -m uvicorn ...`.
 
-### "Cannot connect to backend" when testing dashboard
-**Solution**: 
-1. Check backend is running locally (`uvicorn main:app ...`)
-2. Check `BACKEND_API_URL` in Vercel matches your Railway URL exactly
-3. Check Railway `CORS_ORIGINS` includes your Vercel domain
+### ERR_NGROK_8012
+ngrok is up; nothing is listening on localhost:3000. Start `node server.js` in `LocalAI`. FastAPI on 8000 alone is not enough.
+
+### 502 / Cannot reach backend on the live site
+Vercel cannot reach `BACKEND_API_URL`. Start FastAPI + Node proxy + ngrok. Confirm Vercel URL is the current ngrok host + `/backend` (no trailing slash). Health OK on port 8000 does not prove the live path.
 
 ### Dashboard login rejects password
 **Solution**:
-1. Double-check `DASHBOARD_PASSWORD` in `backend/.env` (local) or Railway (deployed)
+1. Double-check `DASHBOARD_PASSWORD` in `backend/.env`
 2. Ensure no extra spaces before/after password
-3. Restart backend after changing
+3. Restart FastAPI after changing
 
 ### New projects don't appear on public site
 **Solution**:
@@ -519,25 +466,14 @@ If `uvicorn` command is not recognized, continue using `python -m uvicorn ...`.
 2. Review Vercel build logs (click "View Function Logs")
 3. Ensure `BACKEND_API_URL` doesn't have trailing slash
 
-### Railway deployment fails
-**Solution**:
-1. Check build command: `pip install -r requirements.txt`
-2. Check start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-3. Review Railway logs for Python errors
-
 ### Tasks/Projects not persisting after refresh
 **Solution**:
-1. Check backend `/backend/data/` folder exists and has JSON files
-2. On Railway, ensure you're using persistent storage (Railway default)
+1. Check `backend/data/` exists and has JSON files
+2. FastAPI must be running on this laptop (data lives here, not on Vercel)
 3. Check backend error logs for write permission issues
 
-### AI panel always returns same response
-**Solution**:
-1. Current `/ai/chat` endpoint returns a static planning response
-2. To enable real LLM responses:
-   - Add `AI_API_KEY` to Railway env vars
-   - Modify `backend/main.py` `/ai/chat` route to call OpenAI/Gemini/Groq
-   - Redeploy backend
+### AI chat 502
+LM Studio is not running on 1234, or LocalAI `/v1` proxy is down. Unrelated to FastAPI login.
 
 ---
 
@@ -564,7 +500,7 @@ Track portfolio views and dashboard usage with simple analytics.
 
 - **Next.js Docs**: https://nextjs.org/docs
 - **FastAPI Docs**: https://fastapi.tiangolo.com
-- **Railway Docs**: https://docs.railway.app
+- **ngrok Docs**: https://ngrok.com/docs
 - **Vercel Docs**: https://vercel.com/docs
 - **Tailwind CSS**: https://tailwindcss.com/docs
 
@@ -572,16 +508,13 @@ Track portfolio views and dashboard usage with simple analytics.
 
 ## Summary Checklist
 
-- [ ] Local setup complete (npm install, backend/.env created)
-- [ ] Backend runs locally on http://0.0.0.0:8000
-- [ ] Frontend runs locally on http://localhost:3000
-- [ ] Can login to dashboard with password
+- [ ] FastAPI runs on http://127.0.0.1:8000
+- [ ] LocalAI `node server.js` runs on port 3000
+- [ ] `ngrok http 3000` is up
+- [ ] Vercel `BACKEND_API_URL` is ngrok HTTPS host + `/backend`
+- [ ] Vercel `NGROK_SKIP_BROWSER_WARNING` is `1`
+- [ ] Live site login and dashboard work
 - [ ] Can add/edit/delete projects and tasks
-- [ ] Code pushed to GitHub
-- [ ] Backend deployed on Railway
-- [ ] Frontend deployed on Vercel
-- [ ] Backend URL added to Vercel env vars
-- [ ] All public pages load and show data
 - [ ] Personalization complete (name, contact, projects)
 
 Once all items are checked, your portfolio is live!
@@ -593,6 +526,8 @@ Once all items are checked, your portfolio is live!
 Good luck! 🚀
 
 
+
+The archive below is historical planning text. **Deploy/Railway sections in it are obsolete.** Use `README.md` / `main.md` for how the live site actually runs.
 
 This is the old context files of my project: # READ THIS — Context File for Next AI
 > Last updated: April 27, 2026
@@ -716,7 +651,7 @@ portfolio/                    ← Next.js app (Vercel)
     └── api.ts                ← All API calls. Phase 1: returns local JSON.
                                  Phase 3+: fetches from FastAPI.
 
-backend/                      ← FastAPI (Railway) — BUILD IN PHASE 2
+backend/                      ← FastAPI on laptop :8000 (reached via LocalAI /backend + ngrok)
 ├── main.py
 ├── data/
 │   ├── projects.json         ← Live data (backend owns this file)
@@ -732,12 +667,11 @@ backend/                      ← FastAPI (Railway) — BUILD IN PHASE 2
 
 | Layer | Tech | Host |
 |-------|------|------|
-| Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS | Vercel |
-| Backend | FastAPI + Python | Railway |
-| Storage (Phase 1) | JSON files (local, served by Next.js) | Local |
-| Storage (Phase 3+) | JSON files on Railway server | Railway |
-| Storage (Later) | Supabase (Postgres) — drop-in swap of data layer | Supabase |
-| AI | Provider-agnostic (OpenAI / Gemini / Groq via env var) | — |
+| Frontend | Next.js (App Router) + TypeScript + Tailwind CSS | Vercel |
+| Proxy | LocalAI Express (`server.js`) | Laptop :3000, ngrok tunnel |
+| Backend | FastAPI + Python | Laptop :8000 (private) |
+| Storage | JSON files in `backend/data/` | This laptop |
+| AI chat | LM Studio (OpenAI-compatible) | Laptop :1234 |
 
 ---
 
@@ -824,10 +758,8 @@ Auth strategy:
 - All protected routes check `Authorization: Bearer <token>` header
 - Token stored as `httpOnly` cookie in Next.js via a route handler
 
-### Phase 3 — Connect Frontend to Backend
-1. Add `NEXT_PUBLIC_API_URL=https://your-backend.railway.app` to Vercel env vars
-2. In `lib/api.ts`: in `getProjects()` and `getTasks()`, delete the local return and uncomment the fetch block
-3. Test: `npm run build` should succeed
+### Phase 3 — Connect Frontend to Backend (done)
+Vercel `BACKEND_API_URL` = ngrok HTTPS host + `/backend`. Next `/app/api/*` proxies to FastAPI through LocalAI. Do not use `NEXT_PUBLIC_API_URL` or Railway.
 
 ### Phase 4 — Dashboard Pages
 Build these pages in `app/dashboard/`:
@@ -852,7 +784,7 @@ Build these pages in `app/dashboard/`:
 - **2026 goal**: Build and document all projects, learn FastAPI + React + system design, deploy everything
 - **Learning**: Python (advanced), beginning TypeScript/Next.js, Fusion 360 CAD
 - **Constraint**: School laptop — cannot always run scripts. Prefer creating files manually when blocked.
-- **Deployment**: Vercel (frontend), Railway (backend). No experience yet — needs step-by-step.
+- **Deployment**: Vercel frontend + laptop FastAPI via LocalAI (port 3000) and ngrok. No Railway.
 
 ---
 
@@ -869,16 +801,12 @@ These need to be updated with real info:
 
 ---
 
-## DEPLOYMENT CHECKLIST (Vercel)
+## DEPLOYMENT CHECKLIST (current)
 
-1. `git init` in `C:\Users\663208\portfolio`
-2. `git add .` and `git commit -m "initial commit"`
-3. Push to a GitHub repo (github.com → New repo → push)
-4. Go to vercel.com → Import Git Repository → select the repo
-5. Framework: Next.js (auto-detected)
-6. Root directory: leave empty (it's the repo root)
-7. Click Deploy
-8. Once deployed, add env var `NEXT_PUBLIC_API_URL` (leave empty for now, fill in Phase 3)
+1. Frontend already on Vercel: https://mathias-master-portfolio.vercel.app
+2. Set `BACKEND_API_URL` = `https://<ngrok-host>/backend` and `NGROK_SKIP_BROWSER_WARNING` = `1`
+3. Each session: FastAPI :8000, `node server.js` :3000, `ngrok http 3000`
+4. Do not use Railway. Do not point Vercel at `127.0.0.1`.
 
 ---
 
