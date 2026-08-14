@@ -3,9 +3,9 @@
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import TaskStatusBadge from "@/components/dashboard/TaskStatusBadge";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/components/ProjectCard";
-import { getProjects, getRoadmap, getTasks, Task } from "@/lib/api";
+import { getDashboardState, getProjects, getRoadmap, getTasks, Task, updateDashboardState } from "@/lib/api";
 
 const STATUS_RANK: Record<Task["status"], number> = {
   "in progress": 0,
@@ -49,6 +49,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentFocus, setCurrentFocus] = useState("");
+  const focusReadyRef = useRef(false);
   const currentMonth = useMemo(
     () => new Date().toLocaleString("en-US", { month: "long" }),
     []
@@ -57,9 +58,15 @@ export default function DashboardPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [tasksRes, projectsRes] = await Promise.all([getTasks(), getProjects()]);
+        const [tasksRes, projectsRes, focusRes] = await Promise.all([
+          getTasks(),
+          getProjects(),
+          getDashboardState().catch(() => ({ currentFocus: "" })),
+        ]);
         setTasks(tasksRes);
         setProjects(projectsRes);
+        setCurrentFocus(focusRes.currentFocus ?? "");
+        focusReadyRef.current = true;
         try {
           const roadmapRes = await getRoadmap();
           setMonthNote(extractMonthNote(roadmapRes, currentMonth));
@@ -78,11 +85,12 @@ export default function DashboardPage() {
   }, [currentMonth]);
 
   useEffect(() => {
-    const savedFocus = window.localStorage.getItem("dashboard.currentFocus");
-    if (savedFocus && savedFocus.trim()) {
-      setCurrentFocus(savedFocus);
-    }
-  }, []);
+    if (!focusReadyRef.current) return;
+    const timer = window.setTimeout(() => {
+      void updateDashboardState({ currentFocus }).catch(() => undefined);
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [currentFocus]);
 
   const projectById = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
@@ -124,7 +132,6 @@ export default function DashboardPage() {
           value={currentFocus}
           onChange={(e) => {
             setCurrentFocus(e.target.value);
-            window.localStorage.setItem("dashboard.currentFocus", e.target.value);
           }}
           placeholder="One line: what matters this week"
           className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600"
@@ -181,7 +188,7 @@ export default function DashboardPage() {
                       <div className="min-w-0">
                         <p className="truncate font-medium text-white">{task.title}</p>
                         <p className="mt-1 text-xs text-zinc-500">
-                          {project?.title ?? "Unlinked"} · {task.timeframe}
+                          {project?.title ?? "No project"} · {task.timeframe}
                         </p>
                       </div>
                       <TaskStatusBadge status={task.status} />

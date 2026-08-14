@@ -52,6 +52,10 @@ export interface SiteSettings {
   tabs: SiteTab[];
 }
 
+export interface DashboardState {
+  currentFocus: string;
+}
+
 export type TimeframeOption = "1 week" | "2 weeks" | "3 weeks" | "4 weeks";
 
 export interface NoteEntry {
@@ -346,4 +350,28 @@ export async function updateNotes(notes: NoteEntry[]): Promise<NoteEntry[]> {
     body: JSON.stringify({ notes }),
   });
   return readJson<NoteEntry[]>(res);
+}
+
+export async function getDashboardState(): Promise<DashboardState> {
+  const res = await fetch("/api/dashboard-state", { cache: "no-store" });
+  return readJson<DashboardState>(res);
+}
+
+export async function updateDashboardState(
+  state: DashboardState
+): Promise<DashboardState> {
+  const res = await fetch("/api/dashboard-state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(state),
+  });
+  return readJson<DashboardState>(res);
+}
+
+export async function uploadProjectImage(file: File): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/images", { method: "POST", body: form });
+  const data = await readJson<{ url: string }>(res);
+  return data.url;
 }

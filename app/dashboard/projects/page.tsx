@@ -10,6 +10,7 @@ import {
   getSiteSettings,
   type TimeframeOption,
   updateProject,
+  uploadProjectImage,
 } from "@/lib/api";
 import { flattenTabs } from "@/lib/categories";
 import { TIMEFRAME_OPTIONS } from "@/lib/site-config";
@@ -30,15 +31,6 @@ function progressColor(pct: number): string {
   if (pct < 40) return "bg-sky-500";
   if (pct < 75) return "bg-amber-400";
   return "bg-emerald-400";
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 const PRESET_LABELS = [
@@ -190,11 +182,16 @@ export default function DashboardProjectsPage() {
   ) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const dataUrl = await readFileAsDataUrl(file);
-    if (projectId) {
-      await onFieldUpdate(projectId, { image: dataUrl });
-    } else {
-      setImagePreview(dataUrl);
+    try {
+      const url = await uploadProjectImage(file);
+      if (projectId) {
+        await onFieldUpdate(projectId, { image: url });
+      } else {
+        setImagePreview(url);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to upload image";
+      setError(msg);
     }
   }
 
@@ -211,6 +208,9 @@ export default function DashboardProjectsPage() {
   }
 
   async function onDeleteProject(projectId: string) {
+    if (!window.confirm("Delete this project? Linked tasks will stay and become unlinked.")) {
+      return;
+    }
     try {
       await deleteProject(projectId);
       setProjects((prev) => prev.filter((project) => project.id !== projectId));
