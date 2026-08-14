@@ -1,34 +1,66 @@
-Link: mathias-master-portfolio.vercel.app
+# Laptop deploy notes
 
-password for the dashboard is  at C:\Users\mcmat\Documents\Master-Portfolio\backend\.env.example
+Live site: https://mathias-master-portfolio.vercel.app
 
-If you have already pushed the latest code to GitHub, you can test the local AI setup on your machine with the following steps.
+Dashboard password: `DASHBOARD_PASSWORD` in `C:\Users\663208\Downloads\Master-Portfolio\backend\.env`
 
-TERMINAL 1 — FastAPI backend
+This laptop does **not** use Railway. The live Vercel site talks to this machine through ngrok → Node on 3000 → FastAPI on 8000.
 
-cd "C:\Users\mcmat\Documents\Master-Portfolio\backend"
+You do **not** need `npm run dev` for the live site. You **do** need FastAPI, `LocalAI/server.js`, and ngrok running together. `.next` is only a local Next cache; ignore it.
+
+## Vercel env (already set — only change if the ngrok host changes)
+
+- `BACKEND_API_URL` = `https://prelude-divisible-untoasted.ngrok-free.dev/backend`
+- `NGROK_SKIP_BROWSER_WARNING` = `1`
+
+No trailing slash. Use the exact host ngrok prints (`.ngrok-free.dev` vs `.ngrok-free.app` are different; do not swap). Redeploy on Vercel after any env change.
+
+## Start order (every session)
+
+### Terminal 1 — FastAPI
+
+```powershell
+cd C:\Users\663208\Downloads\Master-Portfolio\backend
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
+```
 
-TERMINAL 2 — LM Studio
+Confirm: http://127.0.0.1:8000/ → `{"status":"ok","service":"portfolio-backend"}`
 
-Open the LM Studio app, load your model (e.g. qwen2.5-coder-3b-instruct),
-go to the "Local Server" tab and click "Start Server".
-It binds to port 1234 automatically.
+### Terminal 2 — LM Studio (only for AI chat)
 
-You should see: Server is running at http://127.0.0.1:1234
+Open LM Studio, load a model (e.g. qwen2.5-coder-3b-instruct), Local Server → Start Server.
 
-TERMINAL 3 — Node proxy  ← THIS MUST BE RUNNING BEFORE NGROK
---------------------------------------------------------------
-cd "C:\Users\mcmat\Documents\Master-Portfolio\LocalAI"
+Should show: Server is running at http://127.0.0.1:1234
+
+### Terminal 3 — Node proxy (must be up before ngrok)
+
+```powershell
+cd C:\Users\663208\Downloads\Master-Portfolio\LocalAI
+npm install
 node server.js
+```
 
-Leave running. You should see: Open http://localhost:3000 (bound to 0.0.0.0)
+Leave running. Proxy on http://localhost:3000
 
-This proxy listens on port 3000 and routes:
-  /v1/*      → LM Studio at 127.0.0.1:1234  (AI chat)
-  /backend/* → FastAPI  at 127.0.0.1:8000   (projects, tasks, login)
+- `/v1/*` → LM Studio 127.0.0.1:1234
+- `/backend/*` → FastAPI 127.0.0.1:8000
 
-TERMINAL 4 — ngrok (one tunnel, covers everything)
----------------------------------------------------
+Confirm: http://127.0.0.1:3000/backend → same FastAPI JSON
+
+### Terminal 4 — ngrok
+
+```powershell
 ngrok http 3000
+```
 
+Tunnel **3000**, not 8000.
+
+Confirm: https://prelude-divisible-untoasted.ngrok-free.dev/backend → same FastAPI JSON
+
+Then use https://mathias-master-portfolio.vercel.app
+
+## If it breaks
+
+- **ERR_NGROK_8012** — ngrok reached the laptop, nothing on port 3000. Start `node server.js`.
+- **502 on the live site** — Vercel cannot reach `BACKEND_API_URL`. Start FastAPI + Node + ngrok, and make sure the Vercel URL still matches ngrok’s Forwarding host + `/backend`.
+- Opening http://127.0.0.1:8000/ only proves FastAPI. The live site still needs 3000 and ngrok.
