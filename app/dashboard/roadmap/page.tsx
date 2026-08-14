@@ -1,8 +1,9 @@
 "use client";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { getRoadmap, saveRoadmap } from "@/lib/api";
+import { getRoadmap, getTasks, saveRoadmap, type Task } from "@/lib/api";
 
 const months = [
   "January",
@@ -90,6 +91,7 @@ function serializeRoadmapContent(notes: MonthNotes): string {
 
 export default function DashboardRoadmapPage() {
   const [monthNotes, setMonthNotes] = useState<MonthNotes>(emptyMonthNotes());
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -102,9 +104,13 @@ export default function DashboardRoadmapPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getRoadmap();
+        const [data, taskData] = await Promise.all([
+          getRoadmap(),
+          getTasks().catch(() => [] as Task[]),
+        ]);
         const parsed = parseRoadmapContent(data);
         setMonthNotes(parsed);
+        setTasks(taskData);
         setOpenMonths(
           months.reduce<Partial<Record<MonthName, boolean>>>((acc, month) => {
             acc[month] = month === currentMonth || Boolean(parsed[month].trim());
@@ -168,7 +174,7 @@ export default function DashboardRoadmapPage() {
   }
 
   return (
-    <DashboardShell title="Roadmap" description="High-level notes by month. Separate from tasks.">
+    <DashboardShell title="Roadmap" description="Monthly notes plus live tasks for that month.">
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
           {error}
@@ -202,18 +208,33 @@ export default function DashboardRoadmapPage() {
                 <span className="text-xs text-zinc-500">{isOpen ? "Hide" : "Show"}</span>
               </button>
               {isOpen ? (
-                <textarea
-                  value={monthNotes[month]}
-                  onChange={(e) => {
-                    const nextValue = e.target.value;
-                    setDirty(true);
-                    setMessage("Unsaved changes...");
-                    setMonthNotes((prev) => ({ ...prev, [month]: nextValue }));
-                  }}
-                  disabled={loading}
-                  placeholder={`Add ${month} roadmap...`}
-                  className="mt-2 min-h-[110px] w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2.5 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
-                />
+                <>
+                  <textarea
+                    value={monthNotes[month]}
+                    onChange={(e) => {
+                      const nextValue = e.target.value;
+                      setDirty(true);
+                      setMessage("Unsaved changes...");
+                      setMonthNotes((prev) => ({ ...prev, [month]: nextValue }));
+                    }}
+                    disabled={loading}
+                    placeholder={`Add ${month} roadmap...`}
+                    className="mt-2 min-h-[110px] w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2.5 text-sm text-zinc-200 focus:border-sky-500 focus:outline-none"
+                  />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {tasks
+                      .filter((task) => task.month === month)
+                      .map((task) => (
+                        <Link
+                          key={task.id}
+                          href="/dashboard/tasks"
+                          className="rounded-full border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[11px] text-zinc-300 hover:border-sky-500/50 hover:text-sky-300"
+                        >
+                          {task.title}
+                        </Link>
+                      ))}
+                  </div>
+                </>
               ) : null}
             </div>
           );

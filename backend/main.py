@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
 import re
+import uuid
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import requests
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 load_dotenv()
@@ -24,8 +27,9 @@ CONTEXT_PATH = DATA_DIR / "context.md"
 ROADMAP_PATH = DATA_DIR / "roadmap.md"
 MAINTENANCE_PATH = DATA_DIR / "maintenance.json"
 SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
-SITE_SETTINGS_PATH = DATA_DIR / "site-settings.json"
 NOTES_PATH = DATA_DIR / "notes.json"
+DASHBOARD_STATE_PATH = DATA_DIR / "dashboard.json"
+IMAGES_DIR = DATA_DIR / "images"
 
 DEFAULT_MAINTENANCE_MESSAGE = "This website is currently down, come back soon."
 TIMEFRAME_OPTIONS = {"1 week", "2 weeks", "3 weeks", "4 weeks"}
@@ -106,7 +110,7 @@ class TaskBase(BaseModel):
     category: str
     month: str
     notes: str = ""
-    projectId: str
+    projectId: str = ""
     startDate: str = ""
     endDate: str | None = None
     timeframe: str = "2 weeks"
@@ -178,6 +182,10 @@ class NoteEntry(BaseModel):
 
 class NotesBody(BaseModel):
     notes: list[NoteEntry] = Field(default_factory=list)
+
+
+class DashboardStateBody(BaseModel):
+    currentFocus: str = ""
 
 
 def _read_json(path: Path) -> list[dict[str, Any]]:
@@ -411,7 +419,7 @@ def _normalize_project(item: dict[str, Any]) -> dict[str, Any]:
 def _require_existing_project(project_id: str, projects: list[dict[str, Any]]) -> None:
     normalized = project_id.strip()
     if not normalized:
-        raise HTTPException(status_code=400, detail="projectId is required")
+        return
 
     for project in projects:
         if str(project.get("id", "")).strip() == normalized:
@@ -447,91 +455,53 @@ def _project_progress(project: dict[str, Any]) -> int:
         return 0
 
 
-def _sync_tasks_from_projects(tasks: list[dict[str, Any]], projects: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+
+
+def _persist_image_value(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw.startswith("data:image/"):
+        return raw
+
+    header, _, payload = raw.partition(",")
+    if not payload:
+        return ""
+    mime = header[5:].split(";")[0].strip().lower()
+    ext = ALLOWED_IMAGE_TYPES.get(mime)
+    if not ext:
+        raise HTTPException(status_code=400, detail="Unsupported image type")
+
+    try:
+        binary = base64.b64decode(payload)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid image data") from exc
+
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}{ext}"
+    (IMAGES_DIR / filename).write_bytes(binary)
+    return f"/api/images/{filename}"
+
+
+def _unlink_tasks_from_project(project_id: str) -> None:
+    tasks = _read_json(TASKS_PATH)
     changed = False
-    project_by_id = {str(project.get("id", "")).strip(): project for project in projects}
-    existing_project_ids = {
-        str(task.get("projectId", "")).strip()
-        for task in tasks
-        if str(task.get("projectId", "")).strip()
-    }
-
-    for project in projects:
-        project_id = str(project.get("id", "")).strip()
-        if not project_id:
-            continue
-
-        if _project_progress(project) >= 100:
-            continue
-
-        if project_id in existing_project_ids:
-            continue
-
-        item = {
-            "id": _next_task_id(tasks),
-            "title": str(project.get("title", "Untitled project")),
-            "status": "in progress" if _project_progress(project) > 0 else "planned",
-            "priority": "high" if _project_progress(project) >= 75 else "medium",
-            "category": str(project.get("category", "Project")) or "Project",
-            "month": datetime.now().strftime("%B"),
-            "notes": "Auto-created from project progress.",
-            "projectId": project_id,
-            "startDate": "",
-            "endDate": "",
-            "timeframe": _normalize_timeframe(project.get("timeframe")),
-        }
-        tasks.append(item)
-        existing_project_ids.add(project_id)
-        changed = True
-
     for task in tasks:
-        linked_project_id = str(task.get("projectId", "")).strip()
-        if not linked_project_id:
-            continue
-
-        project = project_by_id.get(linked_project_id)
-        if not project:
-            continue
-
-        if _project_progress(project) >= 100 and str(task.get("status", "")).strip() != "done":
-            task["status"] = "done"
+        if str(task.get("projectId", "")).strip() == project_id:
+            task["projectId"] = ""
             changed = True
-
-        start_raw = str(task.get("startDate", "")).strip()
-        if "timeframe" not in task or task.get("timeframe") not in TIMEFRAME_OPTIONS:
-            task["timeframe"] = "2 weeks"
-            changed = True
-        if start_raw and "endDate" not in task:
-            task["endDate"] = ""
-            changed = True
-
-    return tasks, changed
+    if changed:
+        _write_json(TASKS_PATH, tasks)
+        _push_tasks_to_github()
 
 
-def _sync_project_from_task(task: dict[str, Any], projects: list[dict[str, Any]]) -> bool:
-    linked_project_id = str(task.get("projectId", "")).strip()
-    if not linked_project_id:
-        return False
-
-    for idx, project in enumerate(projects):
-        if str(project.get("id", "")).strip() != linked_project_id:
-            continue
-
-        if str(task.get("status", "")).strip() != "done":
-            return False
-
-        progress = _project_progress(project)
-        status = str(project.get("status", "")).strip()
-        if progress >= 100 and status == "finished":
-            return False
-
-        updated = dict(project)
-        updated["progress"] = 100
-        updated["status"] = "finished"
-        projects[idx] = updated
-        return True
-
-    return False
+def _read_dashboard_state() -> dict[str, Any]:
+    data = _read_json_object(DASHBOARD_STATE_PATH, {"currentFocus": ""})
+    return {"currentFocus": str(data.get("currentFocus", "")).strip()}
 
 
 def _read_maintenance() -> dict[str, Any]:
@@ -840,6 +810,7 @@ def get_projects(authorization: str | None = Header(default=None)) -> list[dict[
 def add_project(body: ProjectCreate) -> dict[str, Any]:
     projects = _read_json(PROJECTS_PATH)
     item = _normalize_project(body.model_dump())
+    item["image"] = _persist_image_value(str(item.get("image", "")))
     item["id"] = _next_project_id(body.title, projects)
     projects.append(item)
     _write_json(PROJECTS_PATH, projects)
@@ -855,6 +826,8 @@ def update_project(project_id: str, body: ProjectUpdate) -> dict[str, Any]:
     for index, item in enumerate(projects):
         if str(item.get("id")) == project_id:
             updated = _normalize_project({**item, **patch})
+            if "image" in patch:
+                updated["image"] = _persist_image_value(str(updated.get("image", "")))
             projects[index] = updated
             _write_json(PROJECTS_PATH, projects)
             _push_projects_to_github()  # Auto-sync to GitHub
@@ -873,18 +846,13 @@ def remove_project(project_id: str) -> dict[str, str]:
 
     _write_json(PROJECTS_PATH, next_projects)
     _push_projects_to_github()  # Auto-sync to GitHub
+    _unlink_tasks_from_project(project_id)
     return {"ok": "true"}
 
 
 @app.get("/tasks", dependencies=[Depends(_require_token)])
 def get_tasks() -> list[dict[str, Any]]:
-    tasks = _read_json(TASKS_PATH)
-    projects = _read_json(PROJECTS_PATH)
-    tasks, changed = _sync_tasks_from_projects(tasks, projects)
-    if changed:
-        _write_json(TASKS_PATH, tasks)
-        _push_tasks_to_github()  # Auto-sync to GitHub
-    return tasks
+    return _read_json(TASKS_PATH)
 
 
 @app.post("/tasks", dependencies=[Depends(_require_token)])
@@ -896,11 +864,6 @@ def add_task(body: TaskCreate) -> dict[str, Any]:
     tasks.append(item)
     _write_json(TASKS_PATH, tasks)
     _push_tasks_to_github()  # Auto-sync to GitHub
-
-    if _sync_project_from_task(item, projects):
-        _write_json(PROJECTS_PATH, projects)
-        _push_projects_to_github()  # Auto-sync to GitHub
-
     return item
 
 
@@ -934,19 +897,8 @@ def reorder_tasks(body: ReorderTasksBody) -> list[dict[str, Any]]:
             continue
         ordered.append(task)
 
-    projects = _read_json(PROJECTS_PATH)
-    project_changed = False
-    for task in ordered:
-        if _sync_project_from_task(task, projects):
-            project_changed = True
-
     _write_json(TASKS_PATH, ordered)
     _push_tasks_to_github()  # Auto-sync to GitHub
-
-    if project_changed:
-        _write_json(PROJECTS_PATH, projects)
-        _push_projects_to_github()  # Auto-sync to GitHub
-
     return ordered
 
 
@@ -962,15 +914,8 @@ def update_task(task_id: str, body: TaskUpdate) -> dict[str, Any]:
             updated = _validate_task_payload(updated, projects)
             tasks[index] = updated
 
-            project_changed = _sync_project_from_task(updated, projects)
-
             _write_json(TASKS_PATH, tasks)
             _push_tasks_to_github()  # Auto-sync to GitHub
-
-            if project_changed:
-                _write_json(PROJECTS_PATH, projects)
-                _push_projects_to_github()  # Auto-sync to GitHub
-
             return updated
 
     raise HTTPException(status_code=404, detail="Task not found")
@@ -1021,6 +966,46 @@ def update_roadmap(body: ContextBody) -> dict[str, Any]:
         "githubSynced": synced,
         "githubSyncEnabled": _github_sync_enabled(),
     }
+
+
+@app.get("/dashboard-state", dependencies=[Depends(_require_token)])
+def get_dashboard_state() -> dict[str, Any]:
+    return _read_dashboard_state()
+
+
+@app.put("/dashboard-state", dependencies=[Depends(_require_token)])
+def update_dashboard_state(body: DashboardStateBody) -> dict[str, Any]:
+    payload = {"currentFocus": body.currentFocus.strip()}
+    _write_json_object(DASHBOARD_STATE_PATH, payload)
+    return payload
+
+
+@app.post("/images", dependencies=[Depends(_require_token)])
+async def upload_image(file: UploadFile = File(...)) -> dict[str, str]:
+    content_type = (file.content_type or "").split(";")[0].strip().lower()
+    ext = ALLOWED_IMAGE_TYPES.get(content_type)
+    if not ext:
+        raise HTTPException(status_code=400, detail="Unsupported image type")
+
+    binary = await file.read()
+    if not binary:
+        raise HTTPException(status_code=400, detail="Empty image file")
+
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}{ext}"
+    (IMAGES_DIR / filename).write_bytes(binary)
+    return {"url": f"/api/images/{filename}"}
+
+
+@app.get("/images/{filename}")
+def get_image(filename: str):
+    safe_name = Path(filename).name
+    if safe_name != filename or not re.fullmatch(r"[a-zA-Z0-9._-]+", safe_name):
+        raise HTTPException(status_code=400, detail="Invalid image name")
+    path = IMAGES_DIR / safe_name
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(path)
 
 
 @app.post("/ai/chat", dependencies=[Depends(_require_token)])
